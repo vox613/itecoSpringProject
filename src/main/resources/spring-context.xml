@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="userDAO" class="dao.map.UserDAOImpl"/>
+    <bean id="taskDAO" class="dao.map.TaskDAOImpl"/>
+    <bean id="contractDAO" class="dao.map.ContractDAOImpl"/>
+
+    <!--    Автосвязывание через конструктор-->
+    <bean id="userService" class="service.UserServiceImpl">
+        <constructor-arg index="0" ref="userDAO"/>
+    </bean>
+
+    <!--    Автосвязывание по имени переменной класса и бина-->
+    <bean id="taskService" class="service.TaskServiceImpl" autowire="byName">
+    </bean>
+
+    <!--    Автосвязывание по типу интерфейса-->
+    <bean id="contractService" class="service.ContractServiceImpl" autowire="byType">
+    </bean>
+
+
+</beans>
