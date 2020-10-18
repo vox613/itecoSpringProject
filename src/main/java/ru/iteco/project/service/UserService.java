@@ -1,7 +1,7 @@
-package service;
+package ru.iteco.project.service;
 
-import model.User;
-import model.UserStatus;
+import ru.iteco.project.model.User;
+import ru.iteco.project.model.UserStatus;
 
 import java.util.ArrayList;
 import java.util.List;

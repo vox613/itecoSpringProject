@@ -1,4 +1,4 @@
-package model;
+package ru.iteco.project.model;
 
 import java.math.BigDecimal;
 import java.util.UUID;

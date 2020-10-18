@@ -1,7 +1,7 @@
-package service;
+package ru.iteco.project.service;
 
-import model.Task;
-import model.TaskStatus;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.TaskStatus;
 
 import java.util.ArrayList;
 

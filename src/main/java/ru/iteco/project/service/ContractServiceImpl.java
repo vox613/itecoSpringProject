@@ -1,8 +1,8 @@
-package service;
+package ru.iteco.project.service;
 
-import dao.ContractDAO;
-import model.Contract;
-import model.ContractStatus;
+import ru.iteco.project.dao.ContractDAO;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.ContractStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

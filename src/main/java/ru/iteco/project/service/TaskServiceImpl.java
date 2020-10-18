@@ -1,8 +1,8 @@
-package service;
+package ru.iteco.project.service;
 
-import dao.TaskDAO;
-import model.Task;
-import model.TaskStatus;
+import ru.iteco.project.dao.TaskDAO;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.TaskStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

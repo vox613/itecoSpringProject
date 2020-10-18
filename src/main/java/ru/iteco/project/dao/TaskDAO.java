@@ -1,8 +1,8 @@
-package dao;
+package ru.iteco.project.dao;
 
-import model.Task;
-import model.TaskStatus;
-import model.User;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.TaskStatus;
+import ru.iteco.project.model.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

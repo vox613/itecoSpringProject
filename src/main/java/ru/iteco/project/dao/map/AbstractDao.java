@@ -1,7 +1,7 @@
-package dao.map;
+package ru.iteco.project.dao.map;
 
-import dao.GenericDAO;
-import model.Identified;
+import ru.iteco.project.dao.GenericDAO;
+import ru.iteco.project.model.Identified;
 
 import java.io.Serializable;
 import java.util.Collection;

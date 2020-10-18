@@ -1,8 +1,8 @@
-package service;
+package ru.iteco.project.service;
 
-import model.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import ru.iteco.project.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

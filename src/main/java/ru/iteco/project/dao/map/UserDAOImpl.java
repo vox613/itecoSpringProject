@@ -1,8 +1,8 @@
-package dao.map;
+package ru.iteco.project.dao.map;
 
-import dao.UserDAO;
-import model.Role;
-import model.User;
+import ru.iteco.project.dao.UserDAO;
+import ru.iteco.project.model.Role;
+import ru.iteco.project.model.User;
 
 import java.util.*;
 

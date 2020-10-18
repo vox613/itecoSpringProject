@@ -1,6 +1,6 @@
-package dao;
+package ru.iteco.project.dao;
 
-import model.Identified;
+import ru.iteco.project.model.Identified;
 
 import java.io.Serializable;
 import java.util.Collection;

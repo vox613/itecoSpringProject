@@ -1,4 +1,4 @@
-package model;
+package ru.iteco.project.model;
 
 public enum Role {
 

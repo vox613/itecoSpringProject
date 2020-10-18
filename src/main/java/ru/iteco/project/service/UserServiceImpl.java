@@ -1,8 +1,8 @@
-package service;
+package ru.iteco.project.service;
 
-import dao.UserDAO;
-import model.User;
-import model.UserStatus;
+import ru.iteco.project.dao.UserDAO;
+import ru.iteco.project.model.User;
+import ru.iteco.project.model.UserStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

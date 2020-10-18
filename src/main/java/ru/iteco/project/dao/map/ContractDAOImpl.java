@@ -1,9 +1,9 @@
-package dao.map;
+package ru.iteco.project.dao.map;
 
-import dao.ContractDAO;
-import model.Contract;
-import model.Task;
-import model.User;
+import ru.iteco.project.dao.ContractDAO;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;

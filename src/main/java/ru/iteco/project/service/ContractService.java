@@ -1,7 +1,7 @@
-package service;
+package ru.iteco.project.service;
 
-import model.Contract;
-import model.ContractStatus;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.ContractStatus;
 
 import java.util.ArrayList;
 

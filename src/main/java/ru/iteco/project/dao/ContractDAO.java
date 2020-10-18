@@ -1,8 +1,8 @@
-package dao;
+package ru.iteco.project.dao;
 
-import model.Contract;
-import model.Task;
-import model.User;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.User;
 
 import java.util.List;
 import java.util.UUID;

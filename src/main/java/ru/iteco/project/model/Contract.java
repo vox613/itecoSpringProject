@@ -1,4 +1,4 @@
-package model;
+package ru.iteco.project.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
