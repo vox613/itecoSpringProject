@@ -1,5 +1,8 @@
 package ru.iteco.project.model;
 
+/**
+ * Перечисление возможных статусов договора
+ */
 public enum ContractStatus {
 
     CONTRACT_REGISTERED("Договор зарегистрирован"),

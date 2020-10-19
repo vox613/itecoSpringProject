@@ -1,5 +1,8 @@
 package ru.iteco.project.model;
 
+/**
+ * Перечисление возможных статусов задания
+ */
 public enum TaskStatus {
 
     TASK_REGISTERED("Задание зарегистрировано"),

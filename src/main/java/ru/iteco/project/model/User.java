@@ -3,20 +3,44 @@ package ru.iteco.project.model;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Модель данных представляющая пользователей
+ */
 public class User implements Identified<UUID> {
 
     private static final long serialVersionUID = -7931737332645464539L;
 
+    /*** Уникальный id пользователя */
     private UUID id;
+
+    /*** Имя пользователя */
     private String firstName;
+
+    /*** Фамилия пользователя */
     private String secondName;
+
+    /*** Отчество пользователя */
     private String lastName;
+
+    /*** Логин пользователя */
     private String login;
+
+    /*** Пароль пользователя */
     private String password;
+
+    /*** Email пользователя */
     private String email;
+
+    /*** Номер телефона пользователя */
     private String phoneNumber;
+
+    /*** Роль пользователя */
     private Role role;
+
+    /*** Статус пользователя */
     private UserStatus userStatus;
+
+    /*** Кошелек пользователя */
     private BigDecimal wallet;
 
 

@@ -1,24 +1,22 @@
 package ru.iteco.project.service;
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
+import ru.iteco.project.config.SpringConfig;
 import ru.iteco.project.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Component
 public class Main {
 
-    public static void main(String[] args) {
+    static User firstUser, secondUser;
 
-        ApplicationContext context = new ClassPathXmlApplicationContext("spring-context.xml");
-
-        UserService userService = (UserService) context.getBean("userService");
-        TaskService taskService = (TaskService) context.getBean("taskService");
-        ContractService contractService = (ContractService) context.getBean("contractService");
-
-        User firstUser = new User();
+    static {
+        firstUser = new User();
         firstUser.setId(UUID.randomUUID());
         firstUser.setFirstName("Алексей");
         firstUser.setSecondName("Александров");
@@ -31,7 +29,7 @@ public class Main {
         firstUser.setUserStatus(UserStatus.STATUS_ACTIVE);
         firstUser.setWallet(new BigDecimal("15000"));
 
-        User secondUser = new User();
+        secondUser = new User();
         secondUser.setId(UUID.randomUUID());
         secondUser.setFirstName("Иван");
         secondUser.setSecondName("Иванов");
@@ -43,12 +41,12 @@ public class Main {
         secondUser.setRole(Role.ROLE_EXECUTOR);
         secondUser.setUserStatus(UserStatus.STATUS_ACTIVE);
         secondUser.setWallet(new BigDecimal("414000"));
+    }
 
-        userService.addUser(firstUser);
-        userService.addUser(secondUser);
+    static Task firstTask, secondTask, thirdTask;
 
-
-        Task firstTask = new Task();
+    static {
+        firstTask = new Task();
         firstTask.setId(UUID.randomUUID());
         firstTask.setName("Задание 1");
         firstTask.setDescription("Описане задания 1");
@@ -57,7 +55,7 @@ public class Main {
         firstTask.setTaskStatus(TaskStatus.TASK_REGISTERED);
         firstTask.setCustomer(firstUser);
 
-        Task secondTask = new Task();
+        secondTask = new Task();
         secondTask.setId(UUID.randomUUID());
         secondTask.setName("Задание 2");
         secondTask.setDescription("Описане задания 2");
@@ -65,22 +63,38 @@ public class Main {
         secondTask.setPrice(new BigDecimal("5000"));
         secondTask.setTaskStatus(TaskStatus.TASK_IN_PROGRESS);
         secondTask.setCustomer(firstUser);
+    }
 
-        taskService.createTask(firstTask);
-        taskService.createTask(secondTask);
+    static Contract firstContract, secondContract;
 
-
-        Contract firstContract = new Contract();
+    static {
+        firstContract = new Contract();
         firstContract.setId(UUID.randomUUID());
         firstContract.setExecutor(secondUser);
         firstContract.setTask(firstTask);
         firstContract.setContractStatus(ContractStatus.CONTRACT_REGISTERED);
 
-        Contract secondContract = new Contract();
+        secondContract = new Contract();
         secondContract.setId(UUID.randomUUID());
         secondContract.setExecutor(secondUser);
         secondContract.setTask(secondTask);
         secondContract.setContractStatus(ContractStatus.CONTRACT_DONE);
+    }
+
+
+    public static void main(String[] args) {
+
+        ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+
+        UserService userService = (UserService) context.getBean("userService");
+        TaskService taskService = (TaskService) context.getBean("taskService");
+        ContractService contractService = (ContractService) context.getBean("contractService");
+
+        userService.addUser(firstUser);
+        userService.addUser(secondUser);
+
+        taskService.createTask(firstTask);
+        taskService.createTask(secondTask);
 
         contractService.createContract(firstContract);
         contractService.createContract(secondContract);

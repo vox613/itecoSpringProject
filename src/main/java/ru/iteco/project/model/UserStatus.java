@@ -1,5 +1,8 @@
 package ru.iteco.project.model;
 
+/**
+ * Перечисление возможных статусов в которых может находитья пользователь
+ */
 public enum UserStatus {
 
     STATUS_CREATED("Создан"),

@@ -1,14 +1,21 @@
 package ru.iteco.project.service;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 import ru.iteco.project.dao.ContractDAO;
 import ru.iteco.project.model.Contract;
 import ru.iteco.project.model.ContractStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+/**
+ * Класс реализующий функционал сервисного слоя для работы с контрактами
+ */
+@Service
 public class ContractServiceImpl implements ContractService {
 
 
@@ -17,16 +24,29 @@ public class ContractServiceImpl implements ContractService {
     private ContractDAO contractDAO;
 
 
+    @Autowired
+    @Qualifier("contractDao")
     public void setContractDAO(ContractDAO contractDAO) {
         this.contractDAO = contractDAO;
     }
 
+    /**
+     * Метод сохранения договора в коллекцию
+     *
+     * @param contract - договор для сохраннения
+     */
     @Override
     public void createContract(Contract contract) {
         contractDAO.save(contract);
         log.info("now: " + LocalDateTime.now() + " createContract: " + contract);
     }
 
+    /**
+     * Метод удаления из коллекции переданного договора
+     *
+     * @param contract - договор для удаления
+     * @return - удаленный договор
+     */
     @Override
     public Contract deleteContract(Contract contract) {
         Contract deletedContract = contractDAO.delete(contract);
@@ -34,6 +54,12 @@ public class ContractServiceImpl implements ContractService {
         return deletedContract;
     }
 
+    /**
+     * Метод изменения статуса договора на переданный в агументах
+     *
+     * @param contract       - договор статус которого необходимо изменить
+     * @param contractStatus - статус на которой меняется состояние договора
+     */
     @Override
     public void changeContractStatusTo(Contract contract, ContractStatus contractStatus) {
         contract.setContractStatus(contractStatus);
@@ -41,6 +67,11 @@ public class ContractServiceImpl implements ContractService {
         log.info("now: " + LocalDateTime.now() + " changeContractStatusTo: " + contract + "StatusTo: " + contractStatus);
     }
 
+    /**
+     * Метод получает все договоры из коллекции
+     *
+     * @return - список всех договоров из коллекции
+     */
     @Override
     public ArrayList<Contract> getAllContracts() {
         return new ArrayList<>(contractDAO.getAll());

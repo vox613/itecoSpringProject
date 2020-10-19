@@ -3,14 +3,25 @@ package ru.iteco.project.model;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Модель данных представляющая договор между исполнителем и заказчиком
+ */
 public class Contract implements Identified<UUID> {
 
     private static final long serialVersionUID = -7931737332645464539L;
-
+    /*** Уникальный id договора */
     private UUID id;
+
+    /*** Испольнитель задания */
     private User executor;
+
+    /*** Дата и всремя заключения договора */
     private LocalDateTime timeOfContractConclusion = LocalDateTime.now();
+
+    /*** Задание - предмет договора */
     private Task task;
+
+    /*** Статус договора */
     private ContractStatus contractStatus;
 
     @Override

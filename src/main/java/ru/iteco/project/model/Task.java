@@ -4,17 +4,35 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Модель данных представляющая задание для исполнения
+ */
 public class Task implements Identified<UUID> {
 
     private static final long serialVersionUID = -7931737332645464539L;
 
+    /*** Уникальный id задания */
     private UUID id;
+
+    /*** Заказчик */
     private User customer;
+
+    /*** Имя задания */
     private String name;
+
+    /*** Описание задания */
     private String description;
+
+    /*** Время и дата размещения задания */
     private LocalDateTime taskCreationDate = LocalDateTime.now();
+
+    /*** Дата и время до наступления которой необходимо выполнить задание */
     private LocalDateTime taskCompletionDate;
+
+    /*** Стоимость исполнения задания */
     private BigDecimal price;
+
+    /*** Статус задания */
     private TaskStatus taskStatus;
 
 
