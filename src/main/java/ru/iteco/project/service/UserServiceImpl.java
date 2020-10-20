@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
+import ru.iteco.project.service.validators.CustomValidator;
+import ru.iteco.project.service.validators.UserValidator;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,12 +21,19 @@ public class UserServiceImpl implements UserService {
     private static final Logger log = LogManager.getLogger(UserServiceImpl.class.getName());
 
     private UserDAO userDAO;
+    private CustomValidator<User> userValidator;
 
     @Autowired
     public UserServiceImpl(@Qualifier("userDao") UserDAO userDAO) {
         log.info("UserServiceImpl");
         this.userDAO = userDAO;
     }
+
+    @Autowired
+    public void setUserValidator(UserValidator userValidator) {
+        this.userValidator = userValidator;
+    }
+
 
     /**
      * Метод сохранения пользователя в коллекцию
@@ -33,6 +42,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void addUser(User user) {
+        userValidator.validate(user);
         log.info("now: " + LocalDateTime.now() + " addUser: " + user);
         userDAO.save(user);
     }
@@ -112,4 +122,7 @@ public class UserServiceImpl implements UserService {
         return existUserWithSameLogin;
     }
 
+    public CustomValidator<User> getUserValidator() {
+        return userValidator;
+    }
 }

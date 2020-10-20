@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.TaskStatus;
+import ru.iteco.project.service.validators.CustomValidator;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,6 +23,12 @@ public class TaskServiceImpl implements TaskService {
     private static final Logger log = LogManager.getLogger(TaskServiceImpl.class.getName());
 
     private TaskDAO taskDAO;
+    private CustomValidator<Task> taskValidator;
+
+    @Autowired
+    public void setTaskValidator(CustomValidator<Task> taskValidator) {
+        this.taskValidator = taskValidator;
+    }
 
     /**
      * Метод сохранения задания в коллекцию
@@ -30,6 +37,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     public void createTask(Task task) {
+        taskValidator.validate(task);
         taskDAO.save(task);
         log.info("now: " + LocalDateTime.now() + " createTask: " + task);
     }
@@ -91,5 +99,9 @@ public class TaskServiceImpl implements TaskService {
     @Qualifier("taskDao")
     public void setTaskDAO(TaskDAO taskDAO) {
         this.taskDAO = taskDAO;
+    }
+
+    public CustomValidator<Task> getTaskValidator() {
+        return taskValidator;
     }
 }
