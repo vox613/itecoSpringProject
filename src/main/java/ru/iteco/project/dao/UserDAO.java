@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Интерфейс описывает общий функционал DAO слоя для сущности User
+ */
 public interface UserDAO extends GenericDAO<User, UUID> {
 
     /**

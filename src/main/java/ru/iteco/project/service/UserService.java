@@ -6,6 +6,9 @@ import ru.iteco.project.model.UserStatus;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Интерфейс описывает общий функционал Service слоя для сущности User
+ */
 public interface UserService {
 
     /**

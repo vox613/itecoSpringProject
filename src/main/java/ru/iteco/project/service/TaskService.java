@@ -6,6 +6,9 @@ import ru.iteco.project.model.TaskStatus;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Интерфейс описывает общий функционал Service слоя для сущности Task
+ */
 public interface TaskService {
 
     /**

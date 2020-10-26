@@ -3,19 +3,19 @@ package ru.iteco.project.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.TaskStatus;
 import ru.iteco.project.service.validators.CustomValidator;
+import ru.iteco.project.service.validators.TaskValidator;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Класс реализующий функционал сервисного слоя для работы с заданиями
+ * Класс реализует функционал сервисного слоя для работы с заданиями
  */
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -23,10 +23,11 @@ public class TaskServiceImpl implements TaskService {
     private static final Logger log = LogManager.getLogger(TaskServiceImpl.class.getName());
 
     private TaskDAO taskDAO;
-    private CustomValidator<Task> taskValidator;
+    private CustomValidator taskValidator;
 
     @Autowired
-    public void setTaskValidator(CustomValidator<Task> taskValidator) {
+    public TaskServiceImpl(TaskDAO taskDAO, CustomValidator<Task> taskValidator) {
+        this.taskDAO = taskDAO;
         this.taskValidator = taskValidator;
     }
 
@@ -93,12 +94,6 @@ public class TaskServiceImpl implements TaskService {
 
     public TaskDAO getTaskDAO() {
         return taskDAO;
-    }
-
-    @Autowired
-    @Qualifier("taskDao")
-    public void setTaskDAO(TaskDAO taskDAO) {
-        this.taskDAO = taskDAO;
     }
 
     public CustomValidator<Task> getTaskValidator() {

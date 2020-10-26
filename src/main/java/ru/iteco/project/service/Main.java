@@ -111,9 +111,9 @@ public class Main {
 
         ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
 
-        UserService userService = (UserService) context.getBean("userService");
-        TaskService taskService = (TaskService) context.getBean("taskService");
-        ContractService contractService = (ContractService) context.getBean("contractService");
+        UserService userService = (UserService) context.getBean("userServiceImpl");
+        TaskService taskService = (TaskService) context.getBean("taskServiceImpl");
+        ContractService contractService = (ContractService) context.getBean("contractServiceImpl");
 
         userService.addUser(firstUser);
         userService.addUser(secondUser);

@@ -10,6 +10,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * Класс реализует функционал валидации полей сущности Task
+ * согласно ограничениям заданным в файле application.properties
+ */
 @Service
 @PropertySource(value = {"classpath:application.properties"})
 public class TaskValidator implements CustomValidator<Task> {

@@ -5,6 +5,9 @@ import ru.iteco.project.model.ContractStatus;
 
 import java.util.ArrayList;
 
+/**
+ * Интерфейс описывает общий функционал Service слоя для сущности Contract
+ */
 public interface ContractService {
 
     /**

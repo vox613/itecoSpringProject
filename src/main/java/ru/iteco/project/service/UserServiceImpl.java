@@ -3,7 +3,6 @@ package ru.iteco.project.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.model.User;
@@ -15,25 +14,22 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс реализует функционал сервисного слоя для работы с пользователями
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
     private static final Logger log = LogManager.getLogger(UserServiceImpl.class.getName());
 
     private UserDAO userDAO;
-    private CustomValidator<User> userValidator;
+    private CustomValidator userValidator;
 
     @Autowired
-    public UserServiceImpl(@Qualifier("userDao") UserDAO userDAO) {
-        log.info("UserServiceImpl");
+    public UserServiceImpl(UserDAO userDAO, CustomValidator<User> userValidator) {
         this.userDAO = userDAO;
-    }
-
-    @Autowired
-    public void setUserValidator(UserValidator userValidator) {
         this.userValidator = userValidator;
     }
-
 
     /**
      * Метод сохранения пользователя в коллекцию

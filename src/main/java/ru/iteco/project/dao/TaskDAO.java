@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Интерфейс описывает общий функционал DAO слоя для сущности Task
+ */
 public interface TaskDAO extends GenericDAO<Task, UUID> {
 
     /**

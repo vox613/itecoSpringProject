@@ -7,6 +7,9 @@ import ru.iteco.project.model.User;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Интерфейс описывает общий функционал DAO слоя для сущности Contract
+ */
 public interface ContractDAO extends GenericDAO<Contract, UUID> {
 
     /**

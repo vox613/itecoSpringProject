@@ -9,6 +9,10 @@ import ru.iteco.project.model.User;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * Класс реализует функционал валидации полей сущности User
+ * согласно ограничениям заданным в файле application.properties
+ */
 @Service
 @PropertySource(value = {"classpath:application.properties"})
 public class UserValidator implements CustomValidator<User> {
