@@ -4,15 +4,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.iteco.project.controller.dto.UserDto;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
+import ru.iteco.project.service.mappers.EntityDtoMapper;
 import ru.iteco.project.service.validators.CustomValidator;
-import ru.iteco.project.service.validators.UserValidator;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с пользователями
@@ -24,11 +24,13 @@ public class UserServiceImpl implements UserService {
 
     private UserDAO userDAO;
     private CustomValidator userValidator;
+    private EntityDtoMapper<User, UserDto> userDtoMapper;
 
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, CustomValidator<User> userValidator) {
+    public UserServiceImpl(UserDAO userDAO, CustomValidator userValidator, EntityDtoMapper<User, UserDto> userDtoMapper) {
         this.userDAO = userDAO;
         this.userValidator = userValidator;
+        this.userDtoMapper = userDtoMapper;
     }
 
     /**
@@ -116,6 +118,48 @@ public class UserServiceImpl implements UserService {
         boolean existUserWithSameLogin = userDAO.findUserByLogin(login) != null;
         log.info("now: " + LocalDateTime.now() + " checkUserWithSameLoginExist: " + existUserWithSameLogin);
         return existUserWithSameLogin;
+    }
+
+    @Override
+    public UserDto getUserById(UUID uuid) {
+        Optional<User> optionalUser = userDAO.findUserById(uuid);
+        return userDtoMapper.entityToDto(optionalUser.orElseGet(User::new));
+    }
+
+
+    @Override
+    public UserDto createUser(UserDto userDto) {
+        if (!userDAO.emailExist(userDto.getEmail()) && !userDAO.loginExist(userDto.getLogin())) {
+            User newUser = userDtoMapper.dtoToEntity(userDto);
+            User savedUser = userDAO.save(newUser);
+            userDto.setId(savedUser.getId());
+        }
+        return userDto;
+    }
+
+    @Override
+    public UserDto updateUser(UUID id, UserDto userDto) {
+        if (userDAO.userWithIdIsExist(id) && Objects.equals(id, userDto.getId())) {
+            User user = userDtoMapper.dtoToEntity(userDto);
+            user.setId(id);
+            userDAO.update(user);
+        }
+        return userDto;
+    }
+
+    @Override
+    public ArrayList<UserDto> getAllDtoUsers() {
+        ArrayList<UserDto> userDtos = new ArrayList<>();
+        for (User user : getAllUsers()) {
+            userDtos.add(userDtoMapper.entityToDto(user));
+        }
+        return userDtos;
+    }
+
+    @Override
+    public UserDto deleteUser(UUID id) {
+        User user = userDAO.deleteByPK(id);
+        return userDtoMapper.entityToDto(user);
     }
 
     public CustomValidator<User> getUserValidator() {

@@ -1,10 +1,12 @@
 package ru.iteco.project.service;
 
+import ru.iteco.project.controller.dto.UserDto;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Интерфейс описывает общий функционал Service слоя для сущности User
@@ -66,5 +68,21 @@ public interface UserService {
      * false - если нет такого пользователя в коллекции
      */
     boolean checkUserWithSameLoginExist(String login);
+
+    UserDto getUserById(UUID id);
+
+    UserDto createUser(UserDto userDto);
+
+    UserDto updateUser(UUID id, UserDto userDto);
+
+    ArrayList<UserDto> getAllDtoUsers();
+
+    /**
+     * Метод удаляет пользователя из коллекции
+     *
+     * @param id - id пользователя для удаления
+     * @return - UserDto удаленного пользователя
+     */
+    UserDto deleteUser(UUID id);
 
 }

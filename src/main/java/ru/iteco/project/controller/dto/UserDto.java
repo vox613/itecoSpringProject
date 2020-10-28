@@ -1,14 +1,16 @@
-package ru.iteco.project.model;
+package ru.iteco.project.controller.dto;
 
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.iteco.project.model.Role;
+
+import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Модель данных представляющая пользователей
- */
-public class User implements Identified<UUID> {
+public class UserDto implements DtoInterface {
 
-    private static final long serialVersionUID = -7931737332645464539L;
+    public UserDto() {
+    }
 
     /*** Уникальный id пользователя */
     private UUID id;
@@ -28,6 +30,9 @@ public class User implements Identified<UUID> {
     /*** Пароль пользователя */
     private String password;
 
+    /*** Подтверждение пароля */
+    private String repeatPassword;
+
     /*** Email пользователя */
     private String email;
 
@@ -37,14 +42,7 @@ public class User implements Identified<UUID> {
     /*** Роль пользователя */
     private Role role;
 
-    /*** Статус пользователя */
-    private UserStatus userStatus;
 
-    /*** Кошелек пользователя */
-    private BigDecimal wallet = new BigDecimal(0);
-
-
-    @Override
     public UUID getId() {
         return id;
     }
@@ -85,10 +83,12 @@ public class User implements Identified<UUID> {
         this.login = login;
     }
 
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
 
+    @JsonProperty
     public void setPassword(String password) {
         this.password = password;
     }
@@ -117,36 +117,33 @@ public class User implements Identified<UUID> {
         this.role = role;
     }
 
-    public UserStatus getUserStatus() {
-        return userStatus;
+    @JsonIgnore
+    public String getRepeatPassword() {
+        return repeatPassword;
     }
 
-    public void setUserStatus(UserStatus userStatus) {
-        this.userStatus = userStatus;
-    }
-
-    public BigDecimal getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(BigDecimal wallet) {
-        this.wallet = wallet;
+    @JsonProperty
+    public void setRepeatPassword(String repeatPassword) {
+        this.repeatPassword = repeatPassword;
     }
 
     @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", secondName='" + secondName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", login='" + login + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", role=" + role +
-                ", userStatus=" + userStatus +
-                ", wallet=" + wallet +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserDto userDto = (UserDto) o;
+        return firstName.equals(userDto.firstName) &&
+                secondName.equals(userDto.secondName) &&
+                Objects.equals(lastName, userDto.lastName) &&
+                login.equals(userDto.login) &&
+                password.equals(userDto.password) &&
+                email.equals(userDto.email) &&
+                phoneNumber.equals(userDto.phoneNumber) &&
+                role == userDto.role;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firstName, secondName, lastName, login, password, email, phoneNumber, role);
     }
 }
