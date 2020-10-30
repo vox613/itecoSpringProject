@@ -1,10 +1,15 @@
 package ru.iteco.project.service;
 
+import ru.iteco.project.controller.dto.TaskDtoRequest;
+import ru.iteco.project.controller.dto.TaskDtoResponse;
+import ru.iteco.project.controller.dto.UserDtoRequest;
+import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Интерфейс описывает общий функционал Service слоя для сущности Task
@@ -47,6 +52,21 @@ public interface TaskService {
      *
      * @return - список всех заданий из коллекции
      */
-    ArrayList<Task> getAllTasks();
+    ArrayList<TaskDtoResponse> getAllTasks();
+
+    TaskDtoResponse getTaskById(UUID id);
+
+    TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest);
+
+    void updateTask(UUID id, TaskDtoRequest taskDtoRequest);
+
+
+    /**
+     * Метод удаляет пользователя из коллекции
+     *
+     * @param id - id пользователя для удаления
+     * @return - UserDto удаленного пользователя
+     */
+    TaskDtoResponse deleteTask(UUID id);
 
 }

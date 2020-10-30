@@ -1,16 +1,14 @@
 package ru.iteco.project.controller.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.iteco.project.model.Role;
+import ru.iteco.project.model.UserStatus;
 
-import java.util.Objects;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-public class UserDto implements DtoInterface {
-
-    public UserDto() {
-    }
+public class UserBaseDto implements DtoInterface {
 
     /*** Уникальный id пользователя */
     private UUID id;
@@ -27,12 +25,6 @@ public class UserDto implements DtoInterface {
     /*** Логин пользователя */
     private String login;
 
-    /*** Пароль пользователя */
-    private String password;
-
-    /*** Подтверждение пароля */
-    private String repeatPassword;
-
     /*** Email пользователя */
     private String email;
 
@@ -42,6 +34,31 @@ public class UserDto implements DtoInterface {
     /*** Роль пользователя */
     private Role role;
 
+    /*** Статус пользователя */
+    private UserStatus userStatus;
+
+    /*** Кошелек пользователя */
+    private BigDecimal wallet = new BigDecimal(0);
+
+
+
+    public UserBaseDto() {
+    }
+
+    public UserBaseDto(UUID id, String firstName, String secondName, String lastName, String login, String email,
+                       String phoneNumber, Role role, UserStatus userStatus, BigDecimal wallet) {
+        this.id = id;
+        this.firstName = firstName;
+        this.secondName = secondName;
+        this.lastName = lastName;
+        this.login = login;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
+        this.userStatus = userStatus;
+        this.wallet = wallet;
+
+    }
 
     public UUID getId() {
         return id;
@@ -83,16 +100,6 @@ public class UserDto implements DtoInterface {
         this.login = login;
     }
 
-    @JsonIgnore
-    public String getPassword() {
-        return password;
-    }
-
-    @JsonProperty
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -117,33 +124,20 @@ public class UserDto implements DtoInterface {
         this.role = role;
     }
 
-    @JsonIgnore
-    public String getRepeatPassword() {
-        return repeatPassword;
+    public UserStatus getUserStatus() {
+        return userStatus;
     }
 
-    @JsonProperty
-    public void setRepeatPassword(String repeatPassword) {
-        this.repeatPassword = repeatPassword;
+    public void setUserStatus(UserStatus userStatus) {
+        this.userStatus = userStatus;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserDto userDto = (UserDto) o;
-        return firstName.equals(userDto.firstName) &&
-                secondName.equals(userDto.secondName) &&
-                Objects.equals(lastName, userDto.lastName) &&
-                login.equals(userDto.login) &&
-                password.equals(userDto.password) &&
-                email.equals(userDto.email) &&
-                phoneNumber.equals(userDto.phoneNumber) &&
-                role == userDto.role;
+    public BigDecimal getWallet() {
+        return wallet;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(firstName, secondName, lastName, login, password, email, phoneNumber, role);
+    public void setWallet(BigDecimal wallet) {
+        this.wallet = wallet;
     }
+
 }

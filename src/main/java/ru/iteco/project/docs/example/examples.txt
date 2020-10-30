@@ -1,0 +1,88 @@
+
+///////////////////////////////////////
+            UserController
+//////////////////////////////////////
+
+Получить всех пользователей
+GET - http://localhost:8081/frilance/users
+
+Получить пользователя с {id}
+GET - http://localhost:8081/frilance/users/{id}
+
+Создать пользователя
+POST - http://localhost:8081/frilance/users
+{
+    "firstName": "firstName",
+    "secondName": "secondName",
+    "lastName": "lastName",
+    "login": "lin",
+    "email": "mil",
+    "phoneNumber": "phoneNumber",
+    "password": "passwrd",
+    "repeatPassword": "pass",
+    "role": "ROLE_EXECUTOR",
+    "userStatus": "STATUS_CREATED",
+    "wallet": "8000"
+}
+
+Обновить пользователя C {id}
+PUT - http://localhost:8081/frilance/users/{id}
+{
+    "id": {id},
+    "firstName": "firstName",
+    "secondName": "secondName",
+    "lastName": "lastName",
+    "login": "login",
+    "email": "email",
+    "phoneNumber": "phoneNumber",
+    "password": "password",
+    "repeatPassword": "password",
+    "role": "ROLE_EXECUTOR",
+    "userStatus": "STATUS_CREATED",
+    "wallet": "8000"
+}
+
+
+Удалить пользователя с {id}
+DELETE - http://localhost:8081/frilance/users/{id}
+
+
+
+
+
+
+
+///////////////////////////////////////
+            TaskController
+//////////////////////////////////////
+
+
+Получить все задания
+GET - http://localhost:8081/frilance/tasks
+
+Получить задание с {id}
+GET - http://localhost:8081/frilance/tasks/{id}
+
+Создать задание
+POST - http://localhost:8081/frilance/tasks
+{
+    "customerId": {id},
+    "name": "name",
+    "description": "description",
+    "taskCompletionDate": "2020-10-30 18:41:36",
+    "price": "123"
+}
+
+Обновить задание C {id}
+PUT - http://localhost:8081/frilance/tasks/{id}
+{
+    "customerId": {id},
+    "name": "name",
+    "description": "description",
+    "taskCompletionDate": "2020-10-30 18:41:36",
+    "price": "123"
+}
+
+
+Удалить задание с {id}
+DELETE - http://localhost:8081/frilance/tasks/{id}

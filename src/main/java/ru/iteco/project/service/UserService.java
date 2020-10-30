@@ -1,6 +1,7 @@
 package ru.iteco.project.service;
 
-import ru.iteco.project.controller.dto.UserDto;
+import ru.iteco.project.controller.dto.UserDtoRequest;
+import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
 
@@ -28,13 +29,6 @@ public interface UserService {
      * если такой пользователь не был найден
      */
     User getUserByLogin(String login);
-
-    /**
-     * Метод получает всех пользователей из коллекции
-     *
-     * @return - список всех пользователей из коллекции
-     */
-    ArrayList<User> getAllUsers();
 
     /**
      * Метод довавляет в коллекцию переданный список пользователей, перезаписывая информацию о тех,
@@ -69,13 +63,13 @@ public interface UserService {
      */
     boolean checkUserWithSameLoginExist(String login);
 
-    UserDto getUserById(UUID id);
+    UserDtoResponse getUserById(UUID id);
 
-    UserDto createUser(UserDto userDto);
+    UserDtoRequest createUser(UserDtoRequest userDtoRequest);
 
-    UserDto updateUser(UUID id, UserDto userDto);
+    void updateUser(UUID id, UserDtoRequest userDtoRequest);
 
-    ArrayList<UserDto> getAllDtoUsers();
+    ArrayList<UserDtoResponse> getAllUsers();
 
     /**
      * Метод удаляет пользователя из коллекции
@@ -83,6 +77,6 @@ public interface UserService {
      * @param id - id пользователя для удаления
      * @return - UserDto удаленного пользователя
      */
-    UserDto deleteUser(UUID id);
+    UserDtoResponse deleteUser(UUID id);
 
 }

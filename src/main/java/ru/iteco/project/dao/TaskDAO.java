@@ -7,6 +7,7 @@ import ru.iteco.project.model.User;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -20,7 +21,7 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
      * @param taskId - уникальный id задания
      * @return - объект задания, соответствующий данному id, или null, если задания нет в коллекции
      */
-    Task findTaskById(UUID taskId);
+    Optional<Task> findTaskById(UUID taskId);
 
     /**
      * Метод осуществляет поиск задания по имени
@@ -63,4 +64,5 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
      */
     List<Task> findAllTasksWithCompletionDateAfter(LocalDateTime localDateTime);
 
+    boolean taskWithIdIsExist(UUID uuid);
 }

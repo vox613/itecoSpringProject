@@ -2,7 +2,8 @@ package ru.iteco.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.iteco.project.controller.dto.UserDto;
+import ru.iteco.project.controller.dto.UserDtoRequest;
+import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.service.UserService;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.UUID;
 public class UserController {
 
 
-    UserService userService;
+    private final UserService userService;
 
     @Autowired
     public UserController(UserService userService) {
@@ -21,27 +22,27 @@ public class UserController {
 
 
     @GetMapping("/users")
-    List<UserDto> getAllUsers() {
-        return userService.getAllDtoUsers();
+    List<UserDtoResponse> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @GetMapping(value = "/users/{id}")
-    public UserDto getUser(@PathVariable UUID id) {
+    public UserDtoResponse getUser(@PathVariable UUID id) {
         return userService.getUserById(id);
     }
 
     @PostMapping(value = "/users")
-    public UserDto createUser(@RequestBody UserDto userDto) {
-        return userService.createUser(userDto);
+    public UserDtoRequest createUser(@RequestBody UserDtoRequest userDtoRequest) {
+        return userService.createUser(userDtoRequest);
     }
 
     @PutMapping(value = "/users/{id}")
-    public UserDto updateUser(@PathVariable UUID id, @RequestBody UserDto userDto) {
-        return userService.updateUser(id, userDto);
+    public void updateUser(@PathVariable UUID id, @RequestBody UserDtoRequest userDtoRequest) {
+        userService.updateUser(id, userDtoRequest);
     }
 
     @DeleteMapping(value = "/users/{id}")
-    public UserDto deleteUser(@PathVariable UUID id) {
+    public UserDtoResponse deleteUser(@PathVariable UUID id) {
         return userService.deleteUser(id);
     }
 

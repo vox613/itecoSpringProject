@@ -1,6 +1,8 @@
 package ru.iteco.project.model;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,10 +40,13 @@ public class User implements Identified<UUID> {
     private Role role;
 
     /*** Статус пользователя */
-    private UserStatus userStatus;
+    private UserStatus userStatus = UserStatus.STATUS_CREATED;
 
     /*** Кошелек пользователя */
     private BigDecimal wallet = new BigDecimal(0);
+
+    /*** Список id заданий пользователя */
+    List<UUID> tasksIdList = new ArrayList<>();
 
 
     @Override
@@ -131,6 +136,14 @@ public class User implements Identified<UUID> {
 
     public void setWallet(BigDecimal wallet) {
         this.wallet = wallet;
+    }
+
+    public List<UUID> getTasksIdList() {
+        return tasksIdList;
+    }
+
+    public void setTasksIdList(List<UUID> tasksIdList) {
+        this.tasksIdList = tasksIdList;
     }
 
     @Override
