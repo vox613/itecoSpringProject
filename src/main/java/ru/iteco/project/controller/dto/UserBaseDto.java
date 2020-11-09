@@ -1,13 +1,13 @@
 package ru.iteco.project.controller.dto;
 
 import ru.iteco.project.model.Role;
-import ru.iteco.project.model.UserStatus;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * Базовый класс для общих полей dto сущности User
+ */
 public class UserBaseDto implements DtoInterface {
 
     /*** Уникальный id пользователя */
@@ -34,19 +34,15 @@ public class UserBaseDto implements DtoInterface {
     /*** Роль пользователя */
     private Role role;
 
-    /*** Статус пользователя */
-    private UserStatus userStatus;
-
     /*** Кошелек пользователя */
     private BigDecimal wallet = new BigDecimal(0);
-
 
 
     public UserBaseDto() {
     }
 
     public UserBaseDto(UUID id, String firstName, String secondName, String lastName, String login, String email,
-                       String phoneNumber, Role role, UserStatus userStatus, BigDecimal wallet) {
+                       String phoneNumber, Role role, BigDecimal wallet) {
         this.id = id;
         this.firstName = firstName;
         this.secondName = secondName;
@@ -55,7 +51,6 @@ public class UserBaseDto implements DtoInterface {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
-        this.userStatus = userStatus;
         this.wallet = wallet;
 
     }
@@ -122,14 +117,6 @@ public class UserBaseDto implements DtoInterface {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public UserStatus getUserStatus() {
-        return userStatus;
-    }
-
-    public void setUserStatus(UserStatus userStatus) {
-        this.userStatus = userStatus;
     }
 
     public BigDecimal getWallet() {

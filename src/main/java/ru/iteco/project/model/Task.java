@@ -2,7 +2,6 @@ package ru.iteco.project.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 /**
@@ -16,10 +15,10 @@ public class Task implements Identified<UUID> {
     private UUID id;
 
     /*** Уникальный id заказчика */
-    private UUID customerId;
+    private User customer;
 
     /*** Уникальный id исполнителя */
-    private UUID executorId;
+    private User executor;
 
     /*** Имя задания */
     private String name;
@@ -28,10 +27,13 @@ public class Task implements Identified<UUID> {
     private String description;
 
     /*** Время и дата размещения задания */
-    private final String taskCreationDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    private final LocalDateTime taskCreationDate = LocalDateTime.now();
 
     /*** Дата и время до наступления которой необходимо выполнить задание */
     private LocalDateTime taskCompletionDate;
+
+    /*** Время и дата последнего обновления задания */
+    private LocalDateTime lastTaskUpdateDate;
 
     /*** Стоимость исполнения задания */
     private BigDecimal price;
@@ -42,26 +44,27 @@ public class Task implements Identified<UUID> {
     /*** Решение задания */
     private String taskDecision;
 
-
+    public Task() {
+    }
 
     public void setId(UUID id) {
         this.id = id;
     }
 
-    public UUID getCustomerId() {
-        return customerId;
+    public User getCustomer() {
+        return customer;
     }
 
-    public void setCustomerId(UUID customerId) {
-        this.customerId = customerId;
+    public void setCustomer(User customer) {
+        this.customer = customer;
     }
 
-    public UUID getExecutorId() {
-        return executorId;
+    public User getExecutor() {
+        return executor;
     }
 
-    public void setExecutorId(UUID executorId) {
-        this.executorId = executorId;
+    public void setExecutor(User executor) {
+        this.executor = executor;
     }
 
     public String getName() {
@@ -80,7 +83,7 @@ public class Task implements Identified<UUID> {
         this.description = description;
     }
 
-    public String getTaskCreationDate() {
+    public LocalDateTime getTaskCreationDate() {
         return taskCreationDate;
     }
 
@@ -121,19 +124,12 @@ public class Task implements Identified<UUID> {
         return id;
     }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", customerId=" + customerId +
-                ", executorId=" + executorId +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", taskCreationDate=" + taskCreationDate +
-                ", taskCompletionDate=" + taskCompletionDate +
-                ", price=" + price +
-                ", taskStatus=" + taskStatus +
-                ", taskDecision='" + taskDecision + '\'' +
-                '}';
+    public LocalDateTime getLastTaskUpdateDate() {
+        return lastTaskUpdateDate;
     }
+
+    public void setLastTaskUpdateDate(LocalDateTime lastTaskUpdateDate) {
+        this.lastTaskUpdateDate = lastTaskUpdateDate;
+    }
+
 }

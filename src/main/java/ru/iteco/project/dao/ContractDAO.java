@@ -5,6 +5,7 @@ import ru.iteco.project.model.Task;
 import ru.iteco.project.model.User;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -26,7 +27,7 @@ public interface ContractDAO extends GenericDAO<Contract, UUID> {
      * @param contractId - уникальный id контракта
      * @return - объект контракта, соответствующий данному id, или null, если контракта нет в коллекции
      */
-    Contract findContractById(UUID contractId);
+    Optional<Contract> findContractById(UUID contractId);
 
     /**
      * Метод осуществляет поиск контракта по заданию
@@ -44,5 +45,11 @@ public interface ContractDAO extends GenericDAO<Contract, UUID> {
      */
     List<Contract> findAllContractsByExecutor(User executor);
 
-
+    /**
+     * Метод проверяет существование контракта с заданным id
+     *
+     * @param uuid - уникальный идентификатор контракта
+     * @return true - искомый контракт существует, false - искомый договор не существует
+     */
+    boolean contractWithIdIsExist(UUID uuid);
 }

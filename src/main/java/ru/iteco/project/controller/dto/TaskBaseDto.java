@@ -3,6 +3,9 @@ package ru.iteco.project.controller.dto;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Базовый класс для общих полей dto сущности Task
+ */
 public class TaskBaseDto implements DtoInterface {
 
     /*** Уникальный id задания */

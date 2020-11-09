@@ -2,12 +2,9 @@ package ru.iteco.project.service;
 
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
-import ru.iteco.project.controller.dto.UserDtoRequest;
-import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.TaskStatus;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,14 +49,48 @@ public interface TaskService {
      *
      * @return - список всех заданий из коллекции
      */
-    ArrayList<TaskDtoResponse> getAllTasks();
+    List<TaskDtoResponse> getAllTasks();
 
+    /**
+     * Метод получает все задания пользователя с id из коллекции
+     *
+     * @return - список всех договоров пользователя из коллекции
+     */
+    List<TaskDtoResponse> getAllUserTasks(UUID userId);
+
+    /**
+     * Метод получения задания по его id
+     *
+     * @param id - уникальный идентификатор задания
+     * @return TaskDtoResponse - dto объект с данными о задании
+     */
     TaskDtoResponse getTaskById(UUID id);
 
+    /**
+     * Метод создания задания
+     *
+     * @param taskDtoRequest - тело запроса с данными для создания задания
+     * @return TaskDtoRequest - dto объект с данными о задании
+     */
     TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest);
 
-    void updateTask(UUID id, TaskDtoRequest taskDtoRequest);
+    /**
+     * Метод создания задания
+     *
+     * @param userId         - id пользователя, инициировавшего процесс
+     * @param taskDtoRequest - тело запроса с данными для создания задания
+     * @return ContractDtoResponse - dto объект с данными о задании
+     */
+    TaskDtoRequest createTask(UUID userId, TaskDtoRequest taskDtoRequest);
 
+    /**
+     * Метод обновления существующего задания
+     *
+     * @param id             - уникальный идентификатор задания
+     * @param userId         - уникальный идентификатор Пользователя
+     * @param taskDtoRequest -  тело запроса для обновления
+     */
+    void updateTask(UUID id, UUID userId, TaskDtoRequest taskDtoRequest);
 
     /**
      * Метод удаляет пользователя из коллекции

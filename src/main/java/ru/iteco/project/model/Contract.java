@@ -13,6 +13,9 @@ public class Contract implements Identified<UUID> {
     private UUID id;
 
     /*** Испольнитель задания */
+    private User customer;
+
+    /*** Испольнитель задания */
     private User executor;
 
     /*** Дата и всремя заключения договора */
@@ -65,14 +68,11 @@ public class Contract implements Identified<UUID> {
         this.contractStatus = contractStatus;
     }
 
-    @Override
-    public String toString() {
-        return "Contract{" +
-                "id=" + id +
-                ", executor=" + executor +
-                ", timeOfContractConclusion=" + timeOfContractConclusion +
-                ", task=" + task +
-                ", contractStatus=" + contractStatus +
-                '}';
+    public User getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(User customer) {
+        this.customer = customer;
     }
 }

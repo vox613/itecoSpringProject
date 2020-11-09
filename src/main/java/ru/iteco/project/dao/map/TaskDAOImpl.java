@@ -29,7 +29,7 @@ public class TaskDAOImpl extends AbstractDao<Task, UUID> implements TaskDAO {
      */
     @Override
     public Optional<Task> findTaskById(UUID taskId) {
-        return Optional.of(getByPK(taskId));
+        return Optional.ofNullable(getByPK(taskId));
     }
 
     /**
@@ -59,7 +59,30 @@ public class TaskDAOImpl extends AbstractDao<Task, UUID> implements TaskDAO {
     public List<Task> findAllTasksByCustomer(User customer) {
         ArrayList<Task> tasks = new ArrayList<>();
         for (Task task : elements.values()) {
-            if ((task != null) && task.getId().equals(customer.getId())) {
+            if ((task != null) && task.getCustomer().getId().equals(customer.getId())) {
+                tasks.add(task);
+            }
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findAllTasksByExecutor(User executor) {
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (Task task : elements.values()) {
+            if ((task != null) && (task.getExecutor() != null)
+                    && task.getExecutor().getId().equals(executor.getId())) {
+                tasks.add(task);
+            }
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findAllTasksByCustomerId(UUID customerId) {
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (Task task : elements.values()) {
+            if ((task != null) && task.getCustomer().getId().equals(customerId)) {
                 tasks.add(task);
             }
         }

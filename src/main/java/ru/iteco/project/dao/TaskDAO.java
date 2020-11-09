@@ -34,10 +34,26 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
     /**
      * Метод осуществляет поиск всех заданий данного заказчика
      *
-     * @param customer - исполнитель, все задания которого необходимо найти
+     * @param customer - заказчик, все задания которого необходимо найти
      * @return - список всех заданий заказчика
      */
     List<Task> findAllTasksByCustomer(User customer);
+
+    /**
+     * Метод осуществляет поиск всех выполненных заданий данного исполнителя
+     *
+     * @param executor - исполнитель, все выполненные задания которого необходимо найти
+     * @return - список всех выполенных заданий исполнителя
+     */
+    List<Task> findAllTasksByExecutor(User executor);
+
+    /**
+     * Метод осуществляет поиск всех заданий данного заказчика
+     *
+     * @param customerId - id заказчика, все задания которого необходимо найти
+     * @return - список всех заданий заказчика
+     */
+    List<Task> findAllTasksByCustomerId(UUID customerId);
 
     /**
      * Метод осуществляет поиск всех заданий с соответствующим статусом
@@ -64,5 +80,11 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
      */
     List<Task> findAllTasksWithCompletionDateAfter(LocalDateTime localDateTime);
 
+    /**
+     * Метод проверяет существование задания с заданным id
+     *
+     * @param uuid - уникальный идентификатор задания
+     * @return true - искомое задание существует, false - искомое задание не существует
+     */
     boolean taskWithIdIsExist(UUID uuid);
 }

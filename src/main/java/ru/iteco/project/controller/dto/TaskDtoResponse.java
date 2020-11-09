@@ -1,6 +1,28 @@
 package ru.iteco.project.controller.dto;
 
+import ru.iteco.project.model.TaskStatus;
+
+import java.util.UUID;
+
+/**
+ * Класс для формирования dto объекта сущности Task, содержащего данные для отображения на фронте
+ */
 public class TaskDtoResponse extends TaskBaseDto {
+
+    /*** Уникальный id исполнителя */
+    private UUID executorId;
+
+    /*** Время и дата размещения задания */
+    private String taskCreationDate;
+
+    /*** Время и дата последнего обновления задания */
+    private String lastTaskUpdateDate;
+
+    /*** Статус задания */
+    private TaskStatus taskStatus;
+
+    /*** Решение задания */
+    private String taskDecision;
 
     /*** Заказчик */
     private UserBaseDto customer;
@@ -8,19 +30,17 @@ public class TaskDtoResponse extends TaskBaseDto {
     /*** Исполнитель */
     private UserBaseDto executor;
 
-    /*** Время и дата размещения задания */
-    private String taskCreationDate;
-
-    /*** Статус задания */
-    private String taskStatus;
-
-    /*** Решение задания */
-    private String taskDecision;
-
 
     public TaskDtoResponse() {
     }
 
+    public UUID getExecutorId() {
+        return executorId;
+    }
+
+    public void setExecutorId(UUID executorId) {
+        this.executorId = executorId;
+    }
 
     public UserBaseDto getCustomer() {
         return customer;
@@ -46,11 +66,11 @@ public class TaskDtoResponse extends TaskBaseDto {
         this.taskCreationDate = taskCreationDate;
     }
 
-    public String getTaskStatus() {
+    public TaskStatus getTaskStatus() {
         return taskStatus;
     }
 
-    public void setTaskStatus(String taskStatus) {
+    public void setTaskStatus(TaskStatus taskStatus) {
         this.taskStatus = taskStatus;
     }
 
@@ -60,5 +80,13 @@ public class TaskDtoResponse extends TaskBaseDto {
 
     public void setTaskDecision(String taskDecision) {
         this.taskDecision = taskDecision;
+    }
+
+    public String getLastTaskUpdateDate() {
+        return lastTaskUpdateDate;
+    }
+
+    public void setLastTaskUpdateDate(String lastTaskUpdateDate) {
+        this.lastTaskUpdateDate = lastTaskUpdateDate;
     }
 }

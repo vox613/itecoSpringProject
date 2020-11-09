@@ -10,7 +10,7 @@ public enum UserStatus {
     STATUS_LOCKED("Заблокирован"),
     STATUS_ACTIVE("Активен");
 
-    private String description;
+    private final String description;
 
     UserStatus(String description) {
         this.description = description;

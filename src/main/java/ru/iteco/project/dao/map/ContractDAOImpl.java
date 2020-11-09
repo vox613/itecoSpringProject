@@ -6,10 +6,7 @@ import ru.iteco.project.model.Contract;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Класс реализующий функционал доступа к данным о договорах
@@ -43,8 +40,8 @@ public class ContractDAOImpl extends AbstractDao<Contract, UUID> implements Cont
      * @return - объект контракта, соответствующий данному id, или null, если контракта нет в коллекции
      */
     @Override
-    public Contract findContractById(UUID contractId) {
-        return getByPK(contractId);
+    public Optional<Contract> findContractById(UUID contractId) {
+        return Optional.ofNullable(getByPK(contractId));
     }
 
     /**
@@ -78,5 +75,16 @@ public class ContractDAOImpl extends AbstractDao<Contract, UUID> implements Cont
             }
         }
         return contracts;
+    }
+
+    /**
+     * Метод проверяет существование контракта с заданным id
+     *
+     * @param uuid - уникальный идентификатор контракта
+     * @return true - искомый контракт существует, false - искомый договор не существует
+     */
+    @Override
+    public boolean contractWithIdIsExist(UUID uuid) {
+        return Optional.ofNullable(getByPK(uuid)).isPresent();
     }
 }

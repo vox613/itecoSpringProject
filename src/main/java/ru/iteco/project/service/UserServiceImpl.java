@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
+import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
@@ -24,15 +25,20 @@ public class UserServiceImpl implements UserService {
     private static final Logger log = LogManager.getLogger(UserServiceImpl.class.getName());
 
     private final UserDAO userDAO;
+    private final TaskDAO taskDAO;
     private final CustomValidator userValidator;
     private final UserDtoEntityMapper userMapper;
 
+
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, CustomValidator userValidator, UserDtoEntityMapper userMapper) {
+    public UserServiceImpl(UserDAO userDAO, TaskDAO taskDAO, CustomValidator userValidator,
+                           UserDtoEntityMapper userMapper) {
         this.userDAO = userDAO;
+        this.taskDAO = taskDAO;
         this.userValidator = userValidator;
         this.userMapper = userMapper;
     }
+
 
     /**
      * Метод сохранения пользователя в коллекцию
@@ -112,19 +118,25 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
     @Override
     public UserDtoResponse getUserById(UUID uuid) {
+        UserDtoResponse userDtoResponse = new UserDtoResponse();
         Optional<User> optionalUser = userDAO.findUserById(uuid);
-        return userMapper.entityToResponseDto(optionalUser.orElseGet(User::new));
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            userDtoResponse = userMapper.entityToResponseDto(user);
+        }
+        return userDtoResponse;
     }
 
 
     @Override
     public UserDtoRequest createUser(UserDtoRequest userDtoRequest) {
-        if (!userDAO.emailExist(userDtoRequest.getEmail()) && !userDAO.loginExist(userDtoRequest.getLogin())) {
+        if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())
+                && isCorrectPasswords(userDtoRequest.getPassword(), userDtoRequest.getRepeatPassword())) {
+
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
+            newUser.setUserStatus(UserStatus.STATUS_CREATED);
             userDAO.save(newUser);
             userDtoRequest.setId(newUser.getId());
         }
@@ -142,17 +154,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ArrayList<UserDtoResponse> getAllUsers() {
-        ArrayList<UserDtoResponse> userBaseDtoList = new ArrayList<>();
+        ArrayList<UserDtoResponse> userDtoResponseList = new ArrayList<>();
         for (User user : userDAO.getAllUsers()) {
-            userBaseDtoList.add(userMapper.entityToResponseDto(user));
+            userDtoResponseList.add(getUserById(user.getId()));
         }
-        return userBaseDtoList;
+        return userDtoResponseList;
     }
 
     @Override
     public UserDtoResponse deleteUser(UUID id) {
-        User user = userDAO.deleteByPK(id);
-        return userMapper.entityToResponseDto(user);
+        UserDtoResponse userDtoResponse = new UserDtoResponse();
+        Optional<User> optionalUser = Optional.ofNullable(userDAO.deleteByPK(id));
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            userDtoResponse = userMapper.entityToResponseDto(user);
+            userDtoResponse.getTasksIdList().forEach(taskDAO::deleteByPK);
+        }
+        return userDtoResponse;
     }
 
     public CustomValidator<User> getUserValidator() {
@@ -165,5 +183,28 @@ public class UserServiceImpl implements UserService {
 
     public UserDtoEntityMapper getUserMapper() {
         return userMapper;
+    }
+
+    /**
+     * Метод проверяет что логин и email не пустые и пользователя с такими данными не существует
+     *
+     * @param login - логин пользователя
+     * @param email - email пользователя
+     * @return - true - логин и email не пусты и пользователя с такими данными не существует, false - в любом ином случае
+     */
+    private boolean isCorrectLoginEmail(String login, String email) {
+        return (login != null) && (email != null) &&
+                !(userDAO.emailExist(email) || userDAO.loginExist(login));
+    }
+
+    /**
+     * Метод проверяет что введенные пароли не пусты и совпадают
+     *
+     * @param password       - пароль
+     * @param repeatPassword - подтверждение пароля
+     * @return - true - пароли не пусты и совпадают, false - в любом ином случае
+     */
+    private boolean isCorrectPasswords(String password, String repeatPassword) {
+        return (password != null) && password.equals(repeatPassword);
     }
 }

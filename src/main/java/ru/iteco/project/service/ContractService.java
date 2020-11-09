@@ -1,9 +1,12 @@
 package ru.iteco.project.service;
 
+import ru.iteco.project.controller.dto.ContractDtoRequest;
+import ru.iteco.project.controller.dto.ContractDtoResponse;
 import ru.iteco.project.model.Contract;
 import ru.iteco.project.model.ContractStatus;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Интерфейс описывает общий функционал Service слоя для сущности Contract
@@ -38,6 +41,37 @@ public interface ContractService {
      *
      * @return - список всех договоров из коллекции
      */
-    ArrayList<Contract> getAllContracts();
+    List<ContractDtoResponse> getAllContracts();
+
+    /**
+     * Метод получения Контракта по его id
+     * @param id - уникальный идентификатор Контракта
+     * @return ContractDtoResponse - dto объект с данными о контракте
+     */
+    ContractDtoResponse getContractById(UUID id);
+
+    /**
+     * Метод создания контракта
+     * @param userId - id пользователя, инициировавшего процесс
+     * @param contractDtoRequest - тело запроса с данными для создания контракта
+     * @return ContractDtoResponse - dto объект с данными о контракте
+     */
+    ContractDtoRequest createContract(UUID userId, ContractDtoRequest contractDtoRequest);
+
+    /**
+     * Метод обновления существующего контракта
+     * @param id - уникальный идентификатор Контракта
+     * @param userId - уникальный идентификатор Пользователя
+     * @param contractDtoRequest -  тело запроса для обновления
+     */
+    void updateContract(UUID id, UUID userId, ContractDtoRequest contractDtoRequest);
+
+    /**
+     * Метод удаляет договор из коллекции
+     *
+     * @param id - id договора для удаления
+     * @return - ContractDto удаленного договора
+     */
+    ContractDtoResponse deleteContract(UUID id);
 
 }

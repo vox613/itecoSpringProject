@@ -1,5 +1,8 @@
 package ru.iteco.project.controller.dto;
 
+/**
+ * Класс хранящий данные для формирования запроса создания/обновления сущности User
+ */
 public class UserDtoRequest extends UserBaseDto {
 
     /*** Пароль пользователя */
