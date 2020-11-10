@@ -5,14 +5,10 @@ package ru.iteco.project.controller.dto;
  */
 public class TaskDtoRequest extends TaskBaseDto {
 
-    /**
-     * Решение задани
-     */
+    /*** Решение задания*/
     private String taskDecision;
 
-    /**
-     * Статус задания
-     */
+    /*** Статус задания*/
     private String taskStatus;
 
 

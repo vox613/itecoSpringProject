@@ -63,12 +63,35 @@ public interface UserService {
      */
     boolean checkUserWithSameLoginExist(String login);
 
+    /**
+     * Метод получения пользователя по id
+     *
+     * @param id - уникальный идентификатор пользователя
+     * @return - представление данных пользователя в форме UserDtoResponse
+     */
     UserDtoResponse getUserById(UUID id);
 
+    /**
+     * Метод создания нового пользователя
+     *
+     * @param userDtoRequest - запрос с данными пользователя
+     * @return - объект UserDtoRequest с уникальным идентификатором id
+     */
     UserDtoRequest createUser(UserDtoRequest userDtoRequest);
 
+    /**
+     * Метод обновления данны пользователя
+     *
+     * @param id             - уникальный идентификатор пользователя
+     * @param userDtoRequest - запрос с обновленными данными клиента
+     */
     void updateUser(UUID id, UserDtoRequest userDtoRequest);
 
+    /**
+     * Метод получения данных обо всех пользователях
+     *
+     * @return - список всех пользователей в форме UserDtoResponse
+     */
     ArrayList<UserDtoResponse> getAllUsers();
 
     /**

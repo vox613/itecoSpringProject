@@ -85,9 +85,21 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      */
     Collection<User> getAllUsers();
 
-
+    /**
+     * Метод получения пользователя по id
+     *
+     * @param uuid - уникальный идентификатор пользователя
+     * @return Optional с объектом User или с null, если такого пользователя не существует
+     */
     Optional<User> findUserById(UUID uuid);
 
+    /**
+     * Метод проверяет существование пользователя с заданным id в системе
+     *
+     * @param uuid - уникальный идентификатор пользователя
+     * @return - true - пользователь с заданным id существует,
+     * false - пользователя с заданным id не существует
+     */
     boolean userWithIdIsExist(UUID uuid);
 
 }
