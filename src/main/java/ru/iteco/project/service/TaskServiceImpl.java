@@ -3,11 +3,14 @@ package ru.iteco.project.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
+import ru.iteco.project.exception.UnavailableRoleOperationException;
 import ru.iteco.project.model.*;
 import ru.iteco.project.service.mappers.TaskDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
@@ -21,9 +24,13 @@ import java.util.stream.Collectors;
  * Класс реализует функционал сервисного слоя для работы с заданиями
  */
 @Service
+@PropertySource(value = {"classpath:errors.properties"})
 public class TaskServiceImpl implements TaskService {
 
     private static final Logger log = LogManager.getLogger(TaskServiceImpl.class.getName());
+
+    @Value("${errors.user.role.operation.unavailable}")
+    private String unavailableOperationMessage;
 
     private final TaskDAO taskDAO;
     private final UserDAO userDAO;
@@ -128,31 +135,22 @@ public class TaskServiceImpl implements TaskService {
         return taskDtoResponse;
     }
 
+
     @Override
     public TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest) {
         Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getCustomerId());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            if (Role.ROLE_CUSTOMER.equals(user.getRole()) && !UserStatus.STATUS_LOCKED.equals(user.getUserStatus())) {
-                user.setUserStatus(UserStatus.STATUS_ACTIVE);
-                userDAO.save(user);
-
-                Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
-                taskDAO.save(task);
-                taskDtoRequest.setId(task.getId());
-                return taskDtoRequest;
-            }
+            checkUserPermissions(user);
+            user.setUserStatus(UserStatus.STATUS_ACTIVE);
+            userDAO.save(user);
+            Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
+            taskDAO.save(task);
+            taskDtoRequest.setId(task.getId());
+            taskDtoRequest.setTaskStatus(task.getTaskStatus().name());
+            return taskDtoRequest;
         }
         return taskDtoRequest;
-    }
-
-    @Override
-    public TaskDtoRequest createTask(UUID userId, TaskDtoRequest taskDtoRequest) {
-        TaskDtoRequest responseForPostRequest = new TaskDtoRequest();
-        if ((userId != null) && userId.equals(taskDtoRequest.getCustomerId())) {
-            responseForPostRequest = createTask(taskDtoRequest);
-        }
-        return responseForPostRequest;
     }
 
 
@@ -211,7 +209,7 @@ public class TaskServiceImpl implements TaskService {
      * false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Task task) {
-        boolean userNotBlocked = !UserStatus.STATUS_LOCKED.equals(user.getUserStatus());
+        boolean userNotBlocked = !UserStatus.STATUS_BLOCKED.equals(user.getUserStatus());
         boolean userIsCustomerAndTaskRegistered = user.getId().equals(task.getCustomer().getId()) &&
                 (TaskStatus.TASK_REGISTERED.equals(task.getTaskStatus()) || TaskStatus.TASK_ON_CHECK.equals(task.getTaskStatus()));
         boolean userIsExecutorAndTaskInProgress = (task.getExecutor() != null) &&
@@ -219,5 +217,15 @@ public class TaskServiceImpl implements TaskService {
                 (TaskStatus.TASK_IN_PROGRESS.equals(task.getTaskStatus()) || TaskStatus.TASK_ON_FIX.equals(task.getTaskStatus()));
 
         return userNotBlocked && (userIsCustomerAndTaskRegistered || userIsExecutorAndTaskInProgress);
+    }
+
+    /**
+     * Метод проверяет доступна ли для пользователя операция создания задания
+     * @param user - сущность пользователя
+     */
+    private void checkUserPermissions(User user) {
+        if (Role.ROLE_EXECUTOR.equals(user.getRole()) || UserStatus.STATUS_BLOCKED.equals(user.getUserStatus())) {
+            throw new UnavailableRoleOperationException(unavailableOperationMessage);
+        }
     }
 }

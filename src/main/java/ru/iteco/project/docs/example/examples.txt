@@ -37,6 +37,7 @@ PUT - http://localhost:8081/frilance/users/{id}
     "password": "password",
     "repeatPassword": "password",
     "role": "ROLE_EXECUTOR",
+    "userStatus": "STATUS_CREATED",
     "wallet": "8000"
 }
 
@@ -64,52 +65,32 @@ GET - http://localhost:8081/frilance/tasks/{id}
 
 
 Получить все задания пользователя с {userId}
-GET - http://localhost:8081/frilance/users/{userId}/tasks
-
-
-Создать задание от имени пользователя с {userId}
-POST - http://localhost:8081/frilance/users/{userId}/tasks
-{
-    "customerId": {userId},
-    "name": "name",
-    "description": "description",
-    "taskCompletionDate": "2020-10-30 18:41:36",
-    "price": "123"
-}
+GET - http://localhost:8081/frilance/tasks?userId={id}
 
 
 Создать задание
-POST - http://localhost:8081/frilance/users/tasks
+POST - http://localhost:8081/frilance/tasks
 {
-    "customerId": {id},
-    "name": "name",
-    "description": "description",
-    "taskCompletionDate": "2020-10-30 18:41:36",
-    "price": "123"
-}
-
-
-Обновить задание с {taskId} от имени владельца задания {userId}
-Возможно при статусе задания TASK_REGISTERED и TASK_ON_CHECK
-PUT - http://localhost:8081/frilance/users/{userId}/tasks/{taskId}
-{
-    "id": {taskId},
     "customerId": {userId},
     "name": "name",
     "description": "description",
     "taskCompletionDate": "2020-10-30 18:41:36",
     "price": "123"
 }
-или + "taskStatus": "TASK_DONE" для изменения статуса задания
 
 
-Обновить задание с {taskId} от имени исполнителя задания {userId}
-Возможно при статусе задания TASK_IN_PROGRESS и TASK_ON_FIX
-PUT - http://localhost:8081/frilance/users/{userId}/tasks/{taskId}
+Обновить задание с {taskId} от имени пользователя с {userId}
+Для заказчика возможно только когда задание в статусах TASK_REGISTERED и TASK_ON_CHECK
+Для исполнителя только когда задание в статусах TASK_IN_PROGRESS и TASK_ON_FIX
+PUT - http://localhost:8081/frilance/tasks/{taskId}?userId={userId}
 {
     "id": {taskId},
     "customerId": {userId},
-    "taskDecision": "taskDecision"
+    "name": "name",
+    "description": "description",
+    "taskCompletionDate": "2020-10-30 18:41:36",
+    "taskStatus": "TASK_ON_FIX"
+    "price": "123"
 }
 
 
@@ -134,8 +115,8 @@ GET - http://localhost:8081/frilance/contracts
 GET - http://localhost:8081/frilance/contracts/{id}
 
 
-Создать контракт от имени исполнителя с {userId} для задания {taskId}
-POST - http://localhost:8081/frilance/users/{userId}/contracts
+Создать контракт для задания {taskId}
+POST - http://localhost:8081/frilance/contracts
 {
     "executorId": {userId},
     "taskId": {taskId},
@@ -146,7 +127,7 @@ POST - http://localhost:8081/frilance/users/{userId}/contracts
 
 Обновить статус  контракта (на CONTRACT_TERMINATED или CONTRACT_DONE) с {contractId} от имени владельца контракта {userId}
 Возможно при статусе контракта CONTRACT_PAID и статусе задания TASK_DONE или TASK_CANCELED
-PUT - http://localhost:8081/frilance/users/{userId}/contracts/{contractId}
+PUT - http://localhost:8081/frilance/contracts/{contractId}?userId={userId}
 {
     "id": {contractId},
     "executorId": {userId},

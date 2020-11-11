@@ -80,6 +80,14 @@ public interface UserService {
     UserDtoRequest createUser(UserDtoRequest userDtoRequest);
 
     /**
+     * Метод создания список пользователей
+     *
+     * @param userDtoRequestList - список пользователей
+     * @return - список пользователей  с проставленными уникальными идентификатороми id
+     */
+    List <UserDtoRequest> createBundleUsers(List <UserDtoRequest> userDtoRequestList);
+
+    /**
      * Метод обновления данны пользователя
      *
      * @param id             - уникальный идентификатор пользователя

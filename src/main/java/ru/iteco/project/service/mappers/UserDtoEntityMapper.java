@@ -7,6 +7,7 @@ import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.model.Role;
 import ru.iteco.project.model.User;
+import ru.iteco.project.model.UserStatus;
 
 import java.util.UUID;
 
@@ -37,8 +38,8 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
             userDtoResponse.setEmail(entity.getEmail());
             userDtoResponse.setPhoneNumber(entity.getPhoneNumber());
             userDtoResponse.setLogin(entity.getLogin());
-            userDtoResponse.setRole(entity.getRole());
-            userDtoResponse.setUserStatus(entity.getUserStatus());
+            userDtoResponse.setRole(entity.getRole().name());
+            userDtoResponse.setUserStatus(entity.getUserStatus().name());
             userDtoResponse.setWallet(entity.getWallet());
             if (Role.ROLE_CUSTOMER.equals(entity.getRole())) {
                 taskDAO.findAllTasksByCustomer(entity)
@@ -63,7 +64,10 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
             user.setPassword(requestDto.getPassword());
             user.setEmail(requestDto.getEmail());
             user.setPhoneNumber(requestDto.getPhoneNumber());
-            user.setRole(requestDto.getRole());
+            user.setRole(Role.valueOf(requestDto.getRole()));
+            if (requestDto.getUserStatus() != null) {
+                user.setUserStatus(UserStatus.valueOf(requestDto.getUserStatus()));
+            }
             user.setWallet(requestDto.getWallet());
         }
         return user;

@@ -1,11 +1,18 @@
 package ru.iteco.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
 import ru.iteco.project.service.TaskService;
+import ru.iteco.project.validator.TaskDtoRequestValidator;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,37 +22,38 @@ import java.util.UUID;
 @RestController
 public class TaskController {
 
-    /**
-     * Объект сервисного слоя для Task
-     */
+    /*** Объект сервисного слоя для Task*/
     private final TaskService taskService;
 
+    /*** Объект валидатора для TaskDtoRequest*/
+    private final TaskDtoRequestValidator taskDtoRequestValidator;
+
+
     @Autowired
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, TaskDtoRequestValidator taskDtoRequestValidator) {
         this.taskService = taskService;
-    }
-
-    /**
-     * Контроллер возвращает список всех созданных заданий
-     *
-     * @return - список TaskDtoResponse
-     */
-    @GetMapping("/tasks")
-    List<TaskDtoResponse> getAllTasks() {
-        return taskService.getAllTasks();
+        this.taskDtoRequestValidator = taskDtoRequestValidator;
     }
 
 
     /**
-     * Контроллер возвращает список всех заданий пользователя {userId}
+     * Контроллер возвращает список всех заданий, а при наличии RequestParam {userId}
+     * возвращаетс список заданий пользователя с соответствующим id
      *
      * @param userId - уникальный идентификатор пользователя
      * @return список объектов TaskDtoResponse
      */
-    @GetMapping("/users/{userId}/tasks")
-    List<TaskDtoResponse> getAllUserTasks(@PathVariable UUID userId) {
-        return taskService.getAllUserTasks(userId);
+    @GetMapping("/tasks")
+    ResponseEntity<List<TaskDtoResponse>> getAllUserTasks(@RequestParam(required = false) UUID userId) {
+        List<TaskDtoResponse> allTasks;
+        if (userId != null) {
+            allTasks = taskService.getAllUserTasks(userId);
+        } else {
+            allTasks = taskService.getAllTasks();
+        }
+        return ResponseEntity.ok().body(allTasks);
     }
+
 
     /**
      * Контроллер возвращает TaskDtoResponse задания с заданным id
@@ -54,21 +62,13 @@ public class TaskController {
      * @return TaskDtoResponse заданного задания или пустой TaskDtoResponse, если данное задание не существует
      */
     @GetMapping(value = "/tasks/{id}")
-    public TaskDtoResponse getTask(@PathVariable UUID id) {
-        return taskService.getTaskById(id);
-    }
-
-    /**
-     * Создает новое задание для заказчика {userId}
-     *
-     * @param userId         - уникальный идентификатор заказчика
-     * @param taskDtoRequest - тело запроса на создание задания
-     * @return Тело запроса на создание задания с уникальным проставленным id,
-     * или тело запроса с id = null, если создать задание не удалось
-     */
-    @PostMapping(value = "/users/{userId}/tasks")
-    public TaskDtoRequest createTask(@RequestBody TaskDtoRequest taskDtoRequest, @PathVariable UUID userId) {
-        return taskService.createTask(userId, taskDtoRequest);
+    public ResponseEntity<TaskDtoResponse> getTask(@PathVariable UUID id) {
+        TaskDtoResponse taskById = taskService.getTaskById(id);
+        if (taskById.getId() != null) {
+            return ResponseEntity.ok().body(taskById);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 
@@ -80,9 +80,25 @@ public class TaskController {
      * * или тело запроса с id = null, если создать задание не удалось
      */
     @PostMapping(value = "/tasks")
-    public TaskDtoRequest createTask(@RequestBody TaskDtoRequest taskDtoRequest) {
-        return taskService.createTask(taskDtoRequest);
+    public ResponseEntity<TaskDtoRequest> createTask(@Validated @RequestBody TaskDtoRequest taskDtoRequest,
+                                                     BindingResult result,
+                                                     UriComponentsBuilder componentsBuilder) {
+
+        if (result.hasErrors()) {
+            taskDtoRequest.setErrors(result.getAllErrors());
+            return ResponseEntity.unprocessableEntity().body(taskDtoRequest);
+        }
+
+        TaskDtoRequest task = taskService.createTask(taskDtoRequest);
+
+        URI uri = componentsBuilder
+                .path(String.format("/tasks/%s", task.getId()))
+                .buildAndExpand(task)
+                .toUri();
+
+        return ResponseEntity.created(uri).body(task);
     }
+
 
     /**
      * Обновляет существующее задание {id} от имени заказчика {userId}
@@ -91,10 +107,21 @@ public class TaskController {
      * @param userId         - уникальный идентификатор заказчика
      * @param taskDtoRequest - тело запроса с данными для обновления
      */
-    @PutMapping(value = "/users/{userId}/tasks/{taskId}")
-    public void updateTask(@PathVariable UUID taskId, @PathVariable UUID userId, @RequestBody TaskDtoRequest taskDtoRequest) {
+    @PutMapping(value = "tasks/{taskId}")
+    public ResponseEntity<TaskDtoRequest> updateTask(@PathVariable UUID taskId,
+                                                     @RequestParam UUID userId,
+                                                     @Validated @RequestBody TaskDtoRequest taskDtoRequest,
+                                                     BindingResult result) {
+
+        if (result.hasErrors()) {
+            taskDtoRequest.setErrors(result.getAllErrors());
+            return ResponseEntity.unprocessableEntity().body(taskDtoRequest);
+        }
+
         taskService.updateTask(taskId, userId, taskDtoRequest);
+        return ResponseEntity.ok().body(taskDtoRequest);
     }
+
 
     /**
      * Удаляет задание с заданным id
@@ -103,9 +130,19 @@ public class TaskController {
      * @return - объект TaskDtoResponse с данными удаленного задания
      */
     @DeleteMapping(value = "/tasks/{id}")
-    public TaskDtoResponse deleteTask(@PathVariable UUID id) {
-        return taskService.deleteTask(id);
+    public ResponseEntity<TaskDtoResponse> deleteTask(@PathVariable UUID id) {
+        TaskDtoResponse taskDtoResponse = taskService.deleteTask(id);
+        if (taskDtoResponse.getId() != null) {
+            return ResponseEntity.ok().body(taskDtoResponse);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
+
+    @InitBinder(value = "taskDtoRequest")
+    private void initBinder(WebDataBinder binder) {
+        binder.setValidator(taskDtoRequestValidator);
+    }
 
 }

@@ -1,6 +1,8 @@
 package ru.iteco.project.service.mappers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
@@ -19,17 +21,18 @@ import java.util.UUID;
  * Класс маппер для сущности Contract
  */
 @Service
+@PropertySource(value = {"classpath:application.properties"})
 public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, ContractDtoRequest, ContractDtoResponse> {
 
-    /**
-     * Объект доступа к DAO слою Пользователей
-     */
+    /*** Объект доступа к DAO слою Пользователей*/
     private final UserDAO userDAO;
 
-    /**
-     * Объект доступа к DAO слою Заданий
-     */
+    /*** Объект доступа к DAO слою Заданий*/
     private final TaskDAO taskDAO;
+
+    /*** Установленный формат даты и времени*/
+    @Value("${format.date.time}")
+    private String formatDateTime;
 
     @Autowired
     public ContractDtoEntityMapper(UserDAO userDAO, TaskDAO taskDAO) {
@@ -45,7 +48,7 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
             contractDtoResponse.setId(entity.getId());
             contractDtoResponse.setExecutorId(entity.getExecutor().getId());
             contractDtoResponse.setTaskId(entity.getTask().getId());
-            contractDtoResponse.setTimeOfContractConclusion(entity.getTimeOfContractConclusion().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
+            contractDtoResponse.setTimeOfContractConclusion(entity.getTimeOfContractConclusion().format(DateTimeFormatter.ofPattern(formatDateTime)));
             contractDtoResponse.setContractStatus(entity.getContractStatus());
         }
         return contractDtoResponse;
@@ -68,10 +71,16 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
         return contract;
     }
 
+    /**
+     * Маппер для обновления заказчиком статуса договора
+     * @param requestDto - объект запроса
+     * @param contract - сущность договора
+     * @param role - роль пользователя инициировавшего процесс
+     */
     public void requestDtoToEntity(ContractDtoRequest requestDto, Contract contract, Role role) {
         if (requestDto != null) {
             if (Role.ROLE_CUSTOMER.equals(role)) {
-                contract.setContractStatus(ContractStatus.valueOf(requestDto.getUpdateContractStatus()));
+                contract.setContractStatus(ContractStatus.valueOf(requestDto.getContractStatus()));
             }
         }
     }

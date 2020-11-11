@@ -23,4 +23,19 @@ public enum TaskStatus {
     }
 
 
+    /**
+     * Метод проверяет является ли входная строка текстовым представлением одного из элементов перечисления
+     *
+     * @param inputTaskStatus - текстовое представление роли
+     * @return true - в перечислении присутствует аргумент с данным именем,
+     * false - в перечислении отсутствует аргумент с данным именем
+     */
+    public static boolean isCorrectValue(String inputTaskStatus) {
+        for (TaskStatus status : values()) {
+            if (status.name().equals(inputTaskStatus)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

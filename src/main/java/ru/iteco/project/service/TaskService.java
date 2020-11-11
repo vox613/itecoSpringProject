@@ -75,15 +75,6 @@ public interface TaskService {
     TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest);
 
     /**
-     * Метод создания задания
-     *
-     * @param userId         - id пользователя, инициировавшего процесс
-     * @param taskDtoRequest - тело запроса с данными для создания задания
-     * @return ContractDtoResponse - dto объект с данными о задании
-     */
-    TaskDtoRequest createTask(UUID userId, TaskDtoRequest taskDtoRequest);
-
-    /**
      * Метод обновления существующего задания
      *
      * @param id             - уникальный идентификатор задания

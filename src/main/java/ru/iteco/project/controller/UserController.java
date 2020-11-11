@@ -1,11 +1,19 @@
 package ru.iteco.project.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.service.UserService;
+import ru.iteco.project.validator.UserDtoRequestValidator;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,14 +23,17 @@ import java.util.UUID;
 @RestController
 public class UserController {
 
-    /**
-     * Объект сервисного слоя для User
-     */
+    /*** Объект сервисного слоя для User*/
     private final UserService userService;
 
+    /*** Объект валидатора для UserDtoRequest*/
+    private final UserDtoRequestValidator userDtoRequestValidator;
+
+
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserDtoRequestValidator userDtoRequestValidator) {
         this.userService = userService;
+        this.userDtoRequestValidator = userDtoRequestValidator;
     }
 
 
@@ -32,9 +43,11 @@ public class UserController {
      * @return - список UserDtoResponse
      */
     @GetMapping("/users")
-    List<UserDtoResponse> getAllUsers() {
-        return userService.getAllUsers();
+    ResponseEntity<List<UserDtoResponse>> getAllUsers() {
+        ArrayList<UserDtoResponse> allUsers = userService.getAllUsers();
+        return ResponseEntity.ok().body(allUsers);
     }
+
 
     /**
      * Контроллер возвращает UserDtoResponse пользователя с заданным id
@@ -43,9 +56,15 @@ public class UserController {
      * @return ContractDtoResponse заданного пользователя или пустой ContractDtoResponse, если данный пользователь не существует
      */
     @GetMapping(value = "/users/{id}")
-    public UserDtoResponse getUser(@PathVariable UUID id) {
-        return userService.getUserById(id);
+    public ResponseEntity<UserDtoResponse> getUser(@PathVariable UUID id) {
+        UserDtoResponse userById = userService.getUserById(id);
+        if (userById.getId() != null) {
+            return ResponseEntity.ok().body(userById);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
+
 
     /**
      * Создает нового пользователя
@@ -55,9 +74,19 @@ public class UserController {
      * * или тело запроса с id = null, если создать пользователя не удалось
      */
     @PostMapping(value = "/users")
-    public UserDtoRequest createUser(@RequestBody UserDtoRequest userDtoRequest) {
-        return userService.createUser(userDtoRequest);
+    public ResponseEntity<UserDtoRequest> createUser(@Validated @RequestBody UserDtoRequest userDtoRequest,
+                                                     BindingResult result,
+                                                     UriComponentsBuilder componentsBuilder) {
+        if (result.hasErrors()) {
+            userDtoRequest.setErrors(result.getAllErrors());
+            return ResponseEntity.unprocessableEntity().body(userDtoRequest);
+        }
+
+        UserDtoRequest user = userService.createUser(userDtoRequest);
+        URI uri = componentsBuilder.path("/users/" + user.getId()).buildAndExpand(user).toUri();
+        return ResponseEntity.created(uri).body(user);
     }
+
 
     /**
      * Обновляет существующего пользователя {id}
@@ -66,8 +95,17 @@ public class UserController {
      * @param userDtoRequest - тело запроса с данными для обновления
      */
     @PutMapping(value = "/users/{id}")
-    public void updateUser(@PathVariable UUID id, @RequestBody UserDtoRequest userDtoRequest) {
+    public ResponseEntity<UserDtoRequest> updateUser(@PathVariable UUID id,
+                                                     @Validated @RequestBody UserDtoRequest userDtoRequest,
+                                                     BindingResult result) {
+
+        if (result.hasErrors()) {
+            userDtoRequest.setErrors(result.getAllErrors());
+            return ResponseEntity.unprocessableEntity().body(userDtoRequest);
+        }
+
         userService.updateUser(id, userDtoRequest);
+        return ResponseEntity.ok().body(userDtoRequest);
     }
 
 
@@ -78,8 +116,18 @@ public class UserController {
      * @return - объект UserDtoResponse с данными удаленного пользователя
      */
     @DeleteMapping(value = "/users/{id}")
-    public UserDtoResponse deleteUser(@PathVariable UUID id) {
-        return userService.deleteUser(id);
+    public ResponseEntity<UserDtoResponse> deleteUser(@PathVariable UUID id) {
+        UserDtoResponse userDtoResponse = userService.deleteUser(id);
+        if (userDtoResponse.getId() != null) {
+            return ResponseEntity.ok().body(userDtoResponse);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @InitBinder(value = "userDtoRequest")
+    private void initBinder(WebDataBinder binder) {
+        binder.setValidator(userDtoRequestValidator);
     }
 
 }

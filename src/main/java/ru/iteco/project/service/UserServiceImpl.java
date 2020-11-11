@@ -15,6 +15,7 @@ import ru.iteco.project.service.validators.CustomValidator;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с пользователями
@@ -132,15 +133,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDtoRequest createUser(UserDtoRequest userDtoRequest) {
-        if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())
-                && isCorrectPasswords(userDtoRequest.getPassword(), userDtoRequest.getRepeatPassword())) {
-
+        if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())) {
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
             newUser.setUserStatus(UserStatus.STATUS_CREATED);
+            userDtoRequest.setUserStatus(UserStatus.STATUS_CREATED.name());
             userDAO.save(newUser);
             userDtoRequest.setId(newUser.getId());
         }
         return userDtoRequest;
+    }
+
+    @Override
+    public List<UserDtoRequest> createBundleUsers(List<UserDtoRequest> userDtoRequestList) {
+        return userDtoRequestList.stream().map(this::createUser).collect(Collectors.toList());
     }
 
     @Override
@@ -186,25 +191,13 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Метод проверяет что логин и email не пустые и пользователя с такими данными не существует
+     * Метод проверяет что пользователя с таким логином и email не существует
      *
      * @param login - логин пользователя
      * @param email - email пользователя
      * @return - true - логин и email не пусты и пользователя с такими данными не существует, false - в любом ином случае
      */
     private boolean isCorrectLoginEmail(String login, String email) {
-        return (login != null) && (email != null) &&
-                !(userDAO.emailExist(email) || userDAO.loginExist(login));
-    }
-
-    /**
-     * Метод проверяет что введенные пароли не пусты и совпадают
-     *
-     * @param password       - пароль
-     * @param repeatPassword - подтверждение пароля
-     * @return - true - пароли не пусты и совпадают, false - в любом ином случае
-     */
-    private boolean isCorrectPasswords(String password, String repeatPassword) {
-        return (password != null) && password.equals(repeatPassword);
+        return !(userDAO.emailExist(email) || userDAO.loginExist(login));
     }
 }
