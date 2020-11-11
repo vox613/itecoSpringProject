@@ -15,9 +15,7 @@ import java.util.UUID;
 @RestController
 public class UserController {
 
-    /**
-     * Объект сервисного слоя для User
-     */
+    /*** Объект сервисного слоя для User*/
     private final UserService userService;
 
     @Autowired
@@ -66,7 +64,9 @@ public class UserController {
      * @param userDtoRequest - тело запроса с данными для обновления
      */
     @PutMapping(value = "/users/{id}")
-    public void updateUser(@PathVariable UUID id, @RequestBody UserDtoRequest userDtoRequest) {
+    public void updateUser(@PathVariable UUID id,
+                           @RequestBody UserDtoRequest userDtoRequest) {
+
         userService.updateUser(id, userDtoRequest);
     }
 

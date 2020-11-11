@@ -36,6 +36,7 @@ public class ContractController {
         return contractService.getAllContracts();
     }
 
+
     /**
      * Контроллер возвращает ContractDtoResponse контракта с заданным id
      *
@@ -47,30 +48,35 @@ public class ContractController {
         return contractService.getContractById(id);
     }
 
+
     /**
      * Создает новый контракт для исполнителя {userId}
      *
-     * @param userId             - уникальный идентификатор исполнителя
      * @param contractDtoRequest - тело запроса на создание контракта
      * @return Тело запроса на создание контракта с уникальным проставленным id,
      * или тело запроса с id = null, если создать контракт не удалось
      */
-    @PostMapping(value = "users/{userId}/contracts")
-    public ContractDtoRequest createContract(@PathVariable UUID userId, @RequestBody ContractDtoRequest contractDtoRequest) {
-        return contractService.createContract(userId, contractDtoRequest);
+    @PostMapping(value = "/contracts")
+    public ContractDtoRequest createContract(@RequestBody ContractDtoRequest contractDtoRequest) {
+        return contractService.createContract(contractDtoRequest);
     }
+
 
     /**
      * Обновляет существующий контракт {id} от имени заказчика {userId}
      *
      * @param id                 - уникальный идентификатор контракта
-     * @param userId             - уникальный идентификатор заказика
+     * @param userId             - уникальный идентификатор пользователя инициировавшего процесс
      * @param contractDtoRequest - тело запроса с данными для обновления
      */
-    @PutMapping(value = "users/{userId}/contracts/{id}")
-    public void updateContract(@PathVariable UUID id, @PathVariable UUID userId, @RequestBody ContractDtoRequest contractDtoRequest) {
+    @PutMapping(value = "/contracts/{id}")
+    public void updateContract(@PathVariable UUID id,
+                               @RequestParam UUID userId,
+                               @RequestBody ContractDtoRequest contractDtoRequest) {
+
         contractService.updateContract(id, userId, contractDtoRequest);
     }
+
 
     /**
      * Удаляет контракт с заданным id

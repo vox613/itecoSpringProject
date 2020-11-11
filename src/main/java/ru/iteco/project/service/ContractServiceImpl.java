@@ -112,9 +112,9 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public ContractDtoRequest createContract(UUID userId, ContractDtoRequest contractDtoRequest) {
+    public ContractDtoRequest createContract(ContractDtoRequest contractDtoRequest) {
         Optional<Task> taskById = taskDAO.findTaskById(contractDtoRequest.getTaskId());
-        Optional<User> executorById = userDAO.findUserById(userId);
+        Optional<User> executorById = userDAO.findUserById(contractDtoRequest.getExecutorId());
         if (taskById.isPresent() && executorById.isPresent()) {
             Task task = taskById.get();
             User customer = task.getCustomer();

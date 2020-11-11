@@ -52,11 +52,10 @@ public interface ContractService {
 
     /**
      * Метод создания контракта
-     * @param userId - id пользователя, инициировавшего процесс
      * @param contractDtoRequest - тело запроса с данными для создания контракта
      * @return ContractDtoResponse - dto объект с данными о контракте
      */
-    ContractDtoRequest createContract(UUID userId, ContractDtoRequest contractDtoRequest);
+    ContractDtoRequest createContract(ContractDtoRequest contractDtoRequest);
 
     /**
      * Метод обновления существующего контракта
