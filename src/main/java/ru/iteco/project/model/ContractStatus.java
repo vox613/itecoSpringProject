@@ -5,10 +5,10 @@ package ru.iteco.project.model;
  */
 public enum ContractStatus {
 
-    CONTRACT_REGISTERED("Договор зарегистрирован"),
-    CONTRACT_TERMINATED("Договор расторгнут"),
-    CONTRACT_PAID("Договор оплачен"),
-    CONTRACT_DONE("Договор исполнен");
+    REGISTERED("Договор зарегистрирован"),
+    TERMINATED("Договор расторгнут"),
+    PAID("Договор оплачен"),
+    DONE("Договор исполнен");
 
     private final String description;
 

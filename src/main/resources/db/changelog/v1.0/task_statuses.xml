@@ -1,0 +1,30 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="1" author="Aleksey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="task_statuses"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="task_statuses" remarks="Таблица статусов заданий">
+            <column name="id" type="uuid" remarks="Идентификатор записи">
+                <constraints primaryKey="true"
+                             primaryKeyName="task_status_pk"
+                             nullable="false"
+                />
+            </column>
+
+            <column name="value" type="varchar(255)" remarks="Название статуса задания">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+        <comment>Задача по созданию таблицы возможных статусов заданий</comment>
+    </changeSet>
+
+</databaseChangeLog>

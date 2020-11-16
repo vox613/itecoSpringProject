@@ -129,11 +129,11 @@ public class ContractServiceImpl implements ContractService {
                 customer.setWallet(customer.getWallet().subtract(task.getPrice()));
                 userDAO.save(customer);
 
-                executor.setUserStatus(UserStatus.STATUS_ACTIVE);
+                executor.setUserStatus(UserStatus.ACTIVE);
                 userDAO.save(executor);
 
                 Contract contract = contractMapper.requestDtoToEntity(contractDtoRequest);
-                contract.setContractStatus(ContractStatus.CONTRACT_PAID);
+                contract.setContractStatus(ContractStatus.PAID);
                 contractDAO.save(contract);
 
                 task.setTaskStatus(TaskStatus.TASK_IN_PROGRESS);
@@ -199,8 +199,8 @@ public class ContractServiceImpl implements ContractService {
      * @return - true - пользователи не заблокированы, false - пользователи заблокированы
      */
     private boolean usersNotBlocked(User customer, User executor) {
-        return !(UserStatus.STATUS_BLOCKED.equals(customer.getUserStatus()) ||
-                UserStatus.STATUS_BLOCKED.equals(executor.getUserStatus()));
+        return !(UserStatus.BLOCKED.equals(customer.getUserStatus()) ||
+                UserStatus.BLOCKED.equals(executor.getUserStatus()));
     }
 
     /**
@@ -210,7 +210,7 @@ public class ContractServiceImpl implements ContractService {
      * @return - true - пользователь имеет роль исполнителя, false -пользователь не имеет роль исполнителя
      */
     private boolean respectiveUserRole(User user) {
-        return Role.ROLE_EXECUTOR.equals(user.getRole());
+        return Role.EXECUTOR.equals(user.getRole());
     }
 
     /**
@@ -233,9 +233,9 @@ public class ContractServiceImpl implements ContractService {
      * контракт оплачен, false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Contract contract) {
-        boolean userNotBlocked = !UserStatus.STATUS_BLOCKED.equals(user.getUserStatus());
+        boolean userNotBlocked = !UserStatus.BLOCKED.equals(user.getUserStatus());
         boolean userIsCustomer = user.getId().equals(contract.getCustomer().getId());
-        boolean contractIsPaid = ContractStatus.CONTRACT_PAID.equals(contract.getContractStatus());
+        boolean contractIsPaid = ContractStatus.PAID.equals(contract.getContractStatus());
         boolean taskInTerminatedStatus = TaskStatus.TASK_DONE.equals(contract.getTask().getTaskStatus())
                 || TaskStatus.TASK_CANCELED.equals(contract.getTask().getTaskStatus());
 

@@ -1,0 +1,32 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="1" author="Aleksey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="contract_statuses"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="contract_statuses" remarks="Таблица статусов контракта">
+            <column name="id" type="uuid" remarks="Идентификатор записи">
+                <constraints primaryKey="true"
+                             primaryKeyName="contract_status_pk"
+                             nullable="false"
+                />
+            </column>
+
+            <column name="value" type="varchar(255)" remarks="Название статуса контракта">
+                <constraints nullable="false"/>
+            </column>
+
+
+
+        </createTable>
+        <comment>Задача по созданию таблицы возможных статусов контрактов</comment>
+    </changeSet>
+
+</databaseChangeLog>

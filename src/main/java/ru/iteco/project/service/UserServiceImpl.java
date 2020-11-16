@@ -135,8 +135,8 @@ public class UserServiceImpl implements UserService {
     public UserDtoRequest createUser(UserDtoRequest userDtoRequest) {
         if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())) {
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
-            newUser.setUserStatus(UserStatus.STATUS_CREATED);
-            userDtoRequest.setUserStatus(UserStatus.STATUS_CREATED.name());
+            newUser.setUserStatus(UserStatus.CREATED);
+            userDtoRequest.setUserStatus(UserStatus.CREATED.name());
             userDAO.save(newUser);
             userDtoRequest.setId(newUser.getId());
         }

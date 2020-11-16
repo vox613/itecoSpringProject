@@ -6,9 +6,9 @@ package ru.iteco.project.model;
 public enum UserStatus {
 
     NOT_EXIST("Пользователя не существует"),
-    STATUS_CREATED("Создан"),
-    STATUS_BLOCKED("Заблокирован"),
-    STATUS_ACTIVE("Активен");
+    CREATED("Создан"),
+    BLOCKED("Заблокирован"),
+    ACTIVE("Активен");
 
     private final String description;
 

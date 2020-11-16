@@ -41,10 +41,10 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
             userDtoResponse.setRole(entity.getRole().name());
             userDtoResponse.setUserStatus(entity.getUserStatus().name());
             userDtoResponse.setWallet(entity.getWallet());
-            if (Role.ROLE_CUSTOMER.equals(entity.getRole())) {
+            if (Role.CUSTOMER.equals(entity.getRole())) {
                 taskDAO.findAllTasksByCustomer(entity)
                         .forEach(task -> userDtoResponse.getTasksIdList().add(task.getId()));
-            } else if (Role.ROLE_EXECUTOR.equals(entity.getRole())) {
+            } else if (Role.EXECUTOR.equals(entity.getRole())) {
                 taskDAO.findAllTasksByExecutor(entity)
                         .forEach(task -> userDtoResponse.getTasksIdList().add(task.getId()));
             }
