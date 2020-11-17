@@ -63,4 +63,17 @@
         <comment>Задача по созданию задания</comment>
     </changeSet>
 
+
+    <changeSet id="2" author="Aleksey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="task" indexName="task_status_idx"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="task" indexName="task_status_idx">
+            <column name="task_status_id"/>
+        </createIndex>
+        <comment>Индекс для поиска задания по статусу</comment>
+    </changeSet>
+
 </databaseChangeLog>

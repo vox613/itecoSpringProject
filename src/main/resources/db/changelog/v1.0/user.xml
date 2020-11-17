@@ -64,7 +64,7 @@
     <changeSet id="2" author="Aleksey Aleksandrov">
         <preConditions onFail="MARK_RAN">
             <not>
-                <indexExists tableName="user" indexName="user_username_idx"/>
+                <indexExists tableName="user" indexName="user_login_email_idx"/>
             </not>
         </preConditions>
         <createIndex tableName="user" indexName="user_login_email_idx">

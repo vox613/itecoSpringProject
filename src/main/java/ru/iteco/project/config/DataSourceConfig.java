@@ -8,6 +8,9 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 
+/**
+ * Конфигурационный класс для datasource базы данных
+ */
 @Configuration
 @PropertySource(value = {"classpath:db.properties"})
 public class DataSourceConfig {
