@@ -5,6 +5,7 @@ import ru.iteco.project.model.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -38,6 +39,15 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      * или null, если пользователя с данным лолгином нет в коллекции
      */
     User findUserByLogin(String login);
+
+    /**
+     * Метод осуществляет поиск пользователя по email
+     *
+     * @param email - email пользователя
+     * @return - объект пользователя, соответствующий данному email,
+     * или null, если пользователя с данным email нет в коллекции
+     */
+    User findUserByEmail(String email);
 
     /**
      * Метод осуществляет поиск пользователя по ФИО
@@ -74,5 +84,22 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      * @return - список вссех пользователей в коллекции
      */
     Collection<User> getAllUsers();
+
+    /**
+     * Метод получения пользователя по id
+     *
+     * @param uuid - уникальный идентификатор пользователя
+     * @return Optional с объектом User или с null, если такого пользователя не существует
+     */
+    Optional<User> findUserById(UUID uuid);
+
+    /**
+     * Метод проверяет существование пользователя с заданным id в системе
+     *
+     * @param uuid - уникальный идентификатор пользователя
+     * @return - true - пользователь с заданным id существует,
+     * false - пользователя с заданным id не существует
+     */
+    boolean userWithIdIsExist(UUID uuid);
 
 }

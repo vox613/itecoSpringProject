@@ -8,10 +8,7 @@ import ru.iteco.project.model.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Класс реализующий функционал доступа к данным о заданиях
@@ -31,8 +28,8 @@ public class TaskDAOImpl extends AbstractDao<Task, UUID> implements TaskDAO {
      * @return - объект задания, соответствующий данному id, или null, если задания нет в коллекции
      */
     @Override
-    public Task findTaskById(UUID taskId) {
-        return getByPK(taskId);
+    public Optional<Task> findTaskById(UUID taskId) {
+        return Optional.ofNullable(getByPK(taskId));
     }
 
     /**
@@ -62,7 +59,30 @@ public class TaskDAOImpl extends AbstractDao<Task, UUID> implements TaskDAO {
     public List<Task> findAllTasksByCustomer(User customer) {
         ArrayList<Task> tasks = new ArrayList<>();
         for (Task task : elements.values()) {
-            if ((task != null) && task.getCustomer().equals(customer)) {
+            if ((task != null) && task.getCustomer().getId().equals(customer.getId())) {
+                tasks.add(task);
+            }
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findAllTasksByExecutor(User executor) {
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (Task task : elements.values()) {
+            if ((task != null) && (task.getExecutor() != null)
+                    && task.getExecutor().getId().equals(executor.getId())) {
+                tasks.add(task);
+            }
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findAllTasksByCustomerId(UUID customerId) {
+        ArrayList<Task> tasks = new ArrayList<>();
+        for (Task task : elements.values()) {
+            if ((task != null) && task.getCustomer().getId().equals(customerId)) {
                 tasks.add(task);
             }
         }
@@ -121,5 +141,10 @@ public class TaskDAOImpl extends AbstractDao<Task, UUID> implements TaskDAO {
             }
         }
         return tasks;
+    }
+
+    @Override
+    public boolean taskWithIdIsExist(UUID uuid) {
+        return Optional.ofNullable(getByPK(uuid)).isPresent();
     }
 }

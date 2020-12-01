@@ -7,10 +7,12 @@ public enum TaskStatus {
 
     TASK_REGISTERED("Задание зарегистрировано"),
     TASK_IN_PROGRESS("Задание на выполнении"),
-    TASK_CANCELED("Задание отменено"),
-    TASK_DONE("Задание выполнено");
+    TASK_ON_CHECK("Задание на проверке"),
+    TASK_ON_FIX("Задание на исправлении"),
+    TASK_DONE("Задание выполнено"),
+    TASK_CANCELED("Задание отменено");
 
-    private String description;
+    private final String description;
 
     TaskStatus(String description) {
         this.description = description;

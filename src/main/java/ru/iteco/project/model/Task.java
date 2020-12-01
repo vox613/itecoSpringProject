@@ -14,8 +14,11 @@ public class Task implements Identified<UUID> {
     /*** Уникальный id задания */
     private UUID id;
 
-    /*** Заказчик */
+    /*** Уникальный id заказчика */
     private User customer;
+
+    /*** Уникальный id исполнителя */
+    private User executor;
 
     /*** Имя задания */
     private String name;
@@ -24,10 +27,13 @@ public class Task implements Identified<UUID> {
     private String description;
 
     /*** Время и дата размещения задания */
-    private LocalDateTime taskCreationDate = LocalDateTime.now();
+    private final LocalDateTime taskCreationDate = LocalDateTime.now();
 
     /*** Дата и время до наступления которой необходимо выполнить задание */
     private LocalDateTime taskCompletionDate;
+
+    /*** Время и дата последнего обновления задания */
+    private LocalDateTime lastTaskUpdateDate;
 
     /*** Стоимость исполнения задания */
     private BigDecimal price;
@@ -35,10 +41,10 @@ public class Task implements Identified<UUID> {
     /*** Статус задания */
     private TaskStatus taskStatus;
 
+    /*** Решение задания */
+    private String taskDecision;
 
-    @Override
-    public UUID getId() {
-        return id;
+    public Task() {
     }
 
     public void setId(UUID id) {
@@ -53,20 +59,20 @@ public class Task implements Identified<UUID> {
         this.customer = customer;
     }
 
+    public User getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(User executor) {
+        this.executor = executor;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public LocalDateTime getTaskCreationDate() {
-        return taskCreationDate;
-    }
-
-    public void setTaskCreationDate(LocalDateTime taskCreationDate) {
-        this.taskCreationDate = taskCreationDate;
     }
 
     public String getDescription() {
@@ -77,12 +83,8 @@ public class Task implements Identified<UUID> {
         this.description = description;
     }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public LocalDateTime getTaskCreationDate() {
+        return taskCreationDate;
     }
 
     public LocalDateTime getTaskCompletionDate() {
@@ -93,6 +95,14 @@ public class Task implements Identified<UUID> {
         this.taskCompletionDate = taskCompletionDate;
     }
 
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
     public TaskStatus getTaskStatus() {
         return taskStatus;
     }
@@ -101,17 +111,25 @@ public class Task implements Identified<UUID> {
         this.taskStatus = taskStatus;
     }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", customer=" + customer +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", taskCreationDate=" + taskCreationDate +
-                ", taskCompletionDate=" + taskCompletionDate +
-                ", price=" + price +
-                ", taskStatus=" + taskStatus +
-                '}';
+    public String getTaskDecision() {
+        return taskDecision;
     }
+
+    public void setTaskDecision(String taskDecision) {
+        this.taskDecision = taskDecision;
+    }
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDateTime getLastTaskUpdateDate() {
+        return lastTaskUpdateDate;
+    }
+
+    public void setLastTaskUpdateDate(LocalDateTime lastTaskUpdateDate) {
+        this.lastTaskUpdateDate = lastTaskUpdateDate;
+    }
+
 }

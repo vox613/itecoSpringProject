@@ -70,6 +70,23 @@ public class UserDAOImpl extends AbstractDao<User, UUID> implements UserDAO {
     }
 
     /**
+     * Метод осуществляет поиск пользователя по email
+     *
+     * @param email - email пользователя
+     * @return - объект пользователя, соответствующий данному email,
+     * или null, если пользователя с данным email нет в коллекции
+     */
+    @Override
+    public User findUserByEmail(String email) {
+        for (User user : elements.values()) {
+            if ((user != null) && user.getEmail().equals(email)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Метод осуществляет поиск пользователя по ФИО
      *
      * @param firstName  - имя пользователя
@@ -135,5 +152,16 @@ public class UserDAOImpl extends AbstractDao<User, UUID> implements UserDAO {
     public Collection<User> getAllUsers() {
         return getAll();
     }
+
+    @Override
+    public Optional<User> findUserById(UUID uuid) {
+        return Optional.ofNullable(getByPK(uuid));
+    }
+
+    @Override
+    public boolean userWithIdIsExist(UUID uuid) {
+        return Optional.ofNullable(getByPK(uuid)).isPresent();
+    }
+
 
 }

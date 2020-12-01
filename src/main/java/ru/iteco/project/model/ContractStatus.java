@@ -10,7 +10,7 @@ public enum ContractStatus {
     CONTRACT_PAID("Договор оплачен"),
     CONTRACT_DONE("Договор исполнен");
 
-    private String description;
+    private final String description;
 
     ContractStatus(String description) {
         this.description = description;

@@ -1,14 +1,14 @@
-package ru.iteco.project.model;
+package ru.iteco.project.controller.dto;
+
+import ru.iteco.project.model.Role;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Модель данных представляющая пользователей
+ * Базовый класс для общих полей dto сущности User
  */
-public class User implements Identified<UUID> {
-
-    private static final long serialVersionUID = -7931737332645464539L;
+public class UserBaseDto implements DtoInterface {
 
     /*** Уникальный id пользователя */
     private UUID id;
@@ -25,9 +25,6 @@ public class User implements Identified<UUID> {
     /*** Логин пользователя */
     private String login;
 
-    /*** Пароль пользователя */
-    private String password;
-
     /*** Email пользователя */
     private String email;
 
@@ -37,14 +34,27 @@ public class User implements Identified<UUID> {
     /*** Роль пользователя */
     private Role role;
 
-    /*** Статус пользователя */
-    private UserStatus userStatus = UserStatus.NOT_EXIST;
-
     /*** Кошелек пользователя */
     private BigDecimal wallet = new BigDecimal(0);
 
 
-    @Override
+    public UserBaseDto() {
+    }
+
+    public UserBaseDto(UUID id, String firstName, String secondName, String lastName, String login, String email,
+                       String phoneNumber, Role role, BigDecimal wallet) {
+        this.id = id;
+        this.firstName = firstName;
+        this.secondName = secondName;
+        this.lastName = lastName;
+        this.login = login;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
+        this.wallet = wallet;
+
+    }
+
     public UUID getId() {
         return id;
     }
@@ -85,14 +95,6 @@ public class User implements Identified<UUID> {
         this.login = login;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -115,14 +117,6 @@ public class User implements Identified<UUID> {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public UserStatus getUserStatus() {
-        return userStatus;
-    }
-
-    public void setUserStatus(UserStatus userStatus) {
-        this.userStatus = userStatus;
     }
 
     public BigDecimal getWallet() {
