@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
  * Класс содержит валидаторы для полей объекта запроса TaskDtoRequest
  */
 @Component
-@PropertySource(value = {"classpath:application.properties"})
+@PropertySource(value = {"classpath:application.yml"})
 public class TaskDtoRequestValidator extends AbstractDtoValidator implements Validator {
     private static final Logger logger = LogManager.getLogger(TaskDtoRequestValidator.class.getName());
 

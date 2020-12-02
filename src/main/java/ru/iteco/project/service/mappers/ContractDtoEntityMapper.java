@@ -20,7 +20,7 @@ import static ru.iteco.project.model.UserRole.UserRoleEnum.CUSTOMER;
  * Класс маппер для сущности Contract
  */
 @Service
-@PropertySource(value = {"classpath:application.properties", "classpath:errors.properties"})
+@PropertySource(value = {"classpath:application.yml", "classpath:errors.properties"})
 public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, ContractDtoRequest, ContractDtoResponse> {
 
     /*** Установленный формат даты и времени*/
