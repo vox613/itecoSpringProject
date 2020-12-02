@@ -57,10 +57,9 @@ public class ContractDtoRequestValidator extends AbstractDtoValidator implements
         }
 
 
-        String contractStatus = contractForm.getContractStatus();
-        if ((contractStatus != null) && !ContractStatus.isCorrectValue(contractStatus)) {
-            logger.error("contract status is invalid");
-            prepareErrorMessage(errors, "contract.status.invalid", "contractStatus");
+        if (StringUtils.isEmpty(contractForm.getContractStatus())) {
+            logger.error("contract status is empty");
+            prepareErrorMessage(errors, "contract.status.empty", "contractStatus");
         }
 
         if (errors.hasErrors()) {

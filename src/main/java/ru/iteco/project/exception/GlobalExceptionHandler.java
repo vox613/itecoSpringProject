@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Перехватчик исключения ContractConclusionException, возникающего при ошибках заключения договора
+     *
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме
      */
@@ -33,6 +34,7 @@ public class GlobalExceptionHandler {
     /**
      * Перехватчик исключения UnavailableRoleOperationException, возникающего при попытке совершения недопустимой операции
      * для текущей роли пользователя
+     *
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме
      */
@@ -43,7 +45,61 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Перехватчик исключения InvalidUserRoleException, возникающего при попытке создать или получить из БД
+     * пользователя с невалидной ролью
+     * ролью
+     *
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(InvalidUserRoleException.class)
+    public ResponseEntity<ResponseError> invalidUserRoleException(InvalidUserRoleException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Перехватчик исключения InvalidUserStatusException, возникающего при попытке создать пользователя с невалидным
+     * статусом
+     *
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(InvalidUserStatusException.class)
+    public ResponseEntity<ResponseError> invalidUserStatusException(InvalidUserStatusException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Перехватчик исключения InvalidTaskStatusException, возникающего при попытке создания/получения/обновления задания
+     * с использованием невалидного/удаленного статуса задания
+     *
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(InvalidTaskStatusException.class)
+    public ResponseEntity<ResponseError> invalidTaskStatusException(InvalidTaskStatusException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Перехватчик исключения InvalidTaskStatusException, возникающего при попытке создания/получения/обновления задания
+     * с использованием невалидного/удаленного статуса задания
+     *
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(InvalidContractStatusException.class)
+    public ResponseEntity<ResponseError> invalidContractStatusException(InvalidContractStatusException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
      * Перехватчик всех остальных не предусмотренных Exception, возникающих при работе приложения
+     *
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме
      */

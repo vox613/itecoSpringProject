@@ -2,7 +2,6 @@ package ru.iteco.project.validator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.PropertySource;
@@ -11,11 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.UserDtoRequest;
-import ru.iteco.project.exception.ContractConclusionException;
-import ru.iteco.project.model.Role;
 import ru.iteco.project.model.UserStatus;
-
-import java.util.Locale;
 
 /**
  * Класс содержит валидаторы для полей объекта запроса UserDtoRequest
@@ -77,9 +72,6 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         if (StringUtils.isEmpty(userForm.getRole())) {
             logger.error("role is empty");
             prepareErrorMessage(errors, "user.role.empty", "role");
-        } else if (!Role.isCorrectValue(userForm.getRole())) {
-            logger.error("role is incorrect");
-            prepareErrorMessage(errors, "user.role.incorrect", "role");
         }
         if (errors.hasErrors()) return;
 
@@ -103,10 +95,11 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         }
 
 
-        if (!UserStatus.isCorrectValue(userForm.getUserStatus())) {
-            logger.error("incorrect user status");
-            prepareErrorMessage(errors, "user.status.incorrect", "userStatus");
+        if (StringUtils.isEmpty(userForm.getUserStatus())) {
+            logger.error("user status empty");
+            prepareErrorMessage(errors, "user.status.empty", "userStatus");
         }
+
     }
 
 }

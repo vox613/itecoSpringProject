@@ -1,10 +1,11 @@
 package ru.iteco.project.dao;
 
 import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.ContractStatus;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.User;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public interface ContractDAO extends GenericDAO<Contract, UUID> {
      * @param task - задание, контракт для которого необходимо найти
      * @return - объект контракта, соответствующий данному заданию, или null, если контракта нет в коллекции
      */
-    Contract findContractByTask(Task task);
+    Optional<Contract> findContractByTask(Task task);
 
     /**
      * Метод осуществляет поиск всех договоров данного  исполнителя
@@ -43,7 +44,24 @@ public interface ContractDAO extends GenericDAO<Contract, UUID> {
      * @param executor - исполнитель, контракты которого необходимо найти
      * @return - список всех договоров исполнителя
      */
-    List<Contract> findAllContractsByExecutor(User executor);
+    Collection<Contract> findAllContractsByExecutor(User executor);
+
+    /**
+     * Метод осуществляет поиск всех договоров c переданным статусом
+     *
+     * @param contractStatus - статус контракта
+     * @return - список всех договоров находящихся в переданном статусе
+     */
+    Collection<Contract> findAllContractsByStatus(ContractStatus contractStatus);
+
+    /**
+     * Метод осуществляет поиск всех договоров c переданным статусом
+     *
+     * @param contractStatusId - id статуса контракта
+     * @return - список всех договоров находящихся в переданном статусе
+     */
+    Collection<Contract> findAllContractsByStatus(UUID contractStatusId);
+
 
     /**
      * Метод проверяет существование контракта с заданным id

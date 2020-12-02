@@ -35,10 +35,10 @@ public class User implements Identified<UUID> {
     private String phoneNumber;
 
     /*** Роль пользователя */
-    private Role role;
+    private UserRole role;
 
     /*** Статус пользователя */
-    private UserStatus userStatus = UserStatus.NOT_EXIST;
+    private UserStatus userStatus;
 
     /*** Кошелек пользователя */
     private BigDecimal wallet = new BigDecimal(0);
@@ -109,11 +109,11 @@ public class User implements Identified<UUID> {
         this.phoneNumber = phoneNumber;
     }
 
-    public Role getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(UserRole role) {
         this.role = role;
     }
 

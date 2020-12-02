@@ -3,7 +3,6 @@ package ru.iteco.project.service;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
 import ru.iteco.project.model.Task;
-import ru.iteco.project.model.TaskStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,37 +11,6 @@ import java.util.UUID;
  * Интерфейс описывает общий функционал Service слоя для сущности Task
  */
 public interface TaskService {
-
-    /**
-     * Метод сохранения задания в коллекцию
-     *
-     * @param task - задание для сохраннения
-     */
-    void createTask(Task task);
-
-    /**
-     * Метод поиска задания по названию
-     *
-     * @param name - название задания
-     * @return - список заданий, название которых совпадает с переданным
-     */
-    List<Task> findTaskByName(String name);
-
-    /**
-     * Метод удаления из коллекции переданного задания
-     *
-     * @param task - задание для удаления
-     * @return - удаленное задание
-     */
-    Task deleteTask(Task task);
-
-    /**
-     * Метод изменения статуса задания на переданный в агументах
-     *
-     * @param task       - задание статус которого необходимо изменить
-     * @param taskStatus - статус на которой меняется состояние задания
-     */
-    void changeTaskStatusTo(Task task, TaskStatus taskStatus);
 
     /**
      * Метод получает все задания из коллекции
@@ -70,25 +38,33 @@ public interface TaskService {
      * Метод создания задания
      *
      * @param taskDtoRequest - тело запроса с данными для создания задания
-     * @return TaskDtoRequest - dto объект с данными о задании
+     * @return TaskDtoResponse - dto объект с данными о задании
      */
-    TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest);
+    TaskDtoResponse createTask(TaskDtoRequest taskDtoRequest);
 
     /**
      * Метод обновления существующего задания
      *
      * @param id             - уникальный идентификатор задания
-     * @param userId         - уникальный идентификатор Пользователя
      * @param taskDtoRequest -  тело запроса для обновления
+     * @return TaskDtoResponse - dto объект с данными о задании
      */
-    void updateTask(UUID id, UUID userId, TaskDtoRequest taskDtoRequest);
+    TaskDtoResponse updateTask(UUID id, TaskDtoRequest taskDtoRequest);
 
     /**
      * Метод удаляет пользователя из коллекции
      *
      * @param id - id пользователя для удаления
-     * @return - UserDto удаленного пользователя
+     * @return - true - задание успешно удалено,
+     * false - произошла ошибка при удалении задания/задания не существует
      */
-    TaskDtoResponse deleteTask(UUID id);
+    Boolean deleteTask(UUID id);
 
+    /**
+     * Метод формирует ответ TaskDtoResponse и обогащает его данными о заказчике и исполнителе
+     *
+     * @param task - объект задания
+     * @return - объект TaskDtoResponse с подготовленными данными о задании, исполнителе и заказчике
+     */
+    TaskDtoResponse enrichByUsersInfo(Task task);
 }

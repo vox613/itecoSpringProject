@@ -4,9 +4,7 @@ import ru.iteco.project.model.Task;
 import ru.iteco.project.model.TaskStatus;
 import ru.iteco.project.model.User;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,28 +22,12 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
     Optional<Task> findTaskById(UUID taskId);
 
     /**
-     * Метод осуществляет поиск задания по имени
+     * Метод осуществляет поиск всех заданий данного пользователя
      *
-     * @param name - имя задания
-     * @return - список заданий с предоставленным именем
+     * @param user - пользователь, все задания которого необходимо найти
+     * @return - список всех заданий пользователя
      */
-    List<Task> findTaskByName(String name);
-
-    /**
-     * Метод осуществляет поиск всех заданий данного заказчика
-     *
-     * @param customer - заказчик, все задания которого необходимо найти
-     * @return - список всех заданий заказчика
-     */
-    List<Task> findAllTasksByCustomer(User customer);
-
-    /**
-     * Метод осуществляет поиск всех выполненных заданий данного исполнителя
-     *
-     * @param executor - исполнитель, все выполненные задания которого необходимо найти
-     * @return - список всех выполенных заданий исполнителя
-     */
-    List<Task> findAllTasksByExecutor(User executor);
+    Collection<Task> findAllTasksByUser(User user);
 
     /**
      * Метод осуществляет поиск всех заданий данного заказчика
@@ -53,32 +35,31 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
      * @param customerId - id заказчика, все задания которого необходимо найти
      * @return - список всех заданий заказчика
      */
-    List<Task> findAllTasksByCustomerId(UUID customerId);
+    Collection<Task> findAllTasksByCustomerId(UUID customerId);
 
     /**
-     * Метод осуществляет поиск всех заданий с соответствующим статусом
+     * Метод осуществляет поиск всех заданий данного исполнителя
      *
-     * @param taskStatus - статус заданий, которые необходимо найти
-     * @return - список всех заданий с предоставленным статусом
+     * @param executorId - id исполнителя, все задания которого необходимо найти
+     * @return - список всех заданий исполнителя
      */
-    List<Task> findAllTasksByStatus(TaskStatus taskStatus);
+    Collection<Task> findAllTasksByExecutorId(UUID executorId);
 
     /**
-     * Метод осуществляет поиск всех заданий, стоимость выполнения которых входит в переданный ценовой диапазон
+     * Метод осуществляет поиск всех заданий c переданным статусом задания
      *
-     * @param minPrice - нижний порог стоимости
-     * @param maxPrice - верхний порог стоимости
-     * @return - список всех заданий, стоимость исполнения которых входит в установленный диапазон
+     * @param taskStatus - статус задания
+     * @return - список всех заданий с переданным статусом
      */
-    List<Task> findTasksInPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+    Collection<Task> findAllTasksWithStatus(TaskStatus taskStatus);
 
     /**
-     * Метод осуществляет поиск всех заданий, срок выполнения которых позже, чем переданная дата
+     * Метод осуществляет поиск всех заданий c переданным статусом задания
      *
-     * @param localDateTime - пороговая дата относительно которой осуществляется поиск заданий
-     * @return - список всех заданий срок выполнения которых находится позже переданной даты
+     * @param taskStatusId - id статуса задания
+     * @return - список всех заданий с переданным статусом
      */
-    List<Task> findAllTasksWithCompletionDateAfter(LocalDateTime localDateTime);
+    Collection<Task> findAllTasksWithStatusId(UUID taskStatusId);
 
     /**
      * Метод проверяет существование задания с заданным id
@@ -87,4 +68,13 @@ public interface TaskDAO extends GenericDAO<Task, UUID> {
      * @return true - искомое задание существует, false - искомое задание не существует
      */
     boolean taskWithIdIsExist(UUID uuid);
+
+    /**
+     * Метод обновления задания с установкой переданного статуса
+     *
+     * @param task           - сущность задания
+     * @param taskStatusEnum - элеммент перечисления статусов задания
+     * @return - Optional с обновленным объектом Task
+     */
+    Optional<Task> updateTaskStatus(Task task, TaskStatus.TaskStatusEnum taskStatusEnum);
 }

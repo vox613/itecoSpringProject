@@ -1,7 +1,5 @@
 package ru.iteco.project.controller.dto;
 
-import ru.iteco.project.model.ContractStatus;
-
 /**
  * Класс для формирования dto объекта сущности Contract, содержащего данные для отображения на фронте
  */
@@ -11,7 +9,7 @@ public class ContractDtoResponse extends ContractBaseDto {
     private String timeOfContractConclusion;
 
     /*** Статус договора */
-    private ContractStatus contractStatus;
+    private String contractStatus;
 
     /*** Заказчик */
     private UserBaseDto customer;
@@ -35,11 +33,11 @@ public class ContractDtoResponse extends ContractBaseDto {
         this.timeOfContractConclusion = timeOfContractConclusion;
     }
 
-    public ContractStatus getContractStatus() {
+    public String getContractStatus() {
         return contractStatus;
     }
 
-    public void setContractStatus(ContractStatus contractStatus) {
+    public void setContractStatus(String contractStatus) {
         this.contractStatus = contractStatus;
     }
 

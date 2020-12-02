@@ -1,16 +1,9 @@
 package ru.iteco.project.controller.dto;
 
-import ru.iteco.project.model.TaskStatus;
-
-import java.util.UUID;
-
 /**
  * Класс для формирования dto объекта сущности Task, содержащего данные для отображения на фронте
  */
 public class TaskDtoResponse extends TaskBaseDto {
-
-    /*** Уникальный id исполнителя */
-    private UUID executorId;
 
     /*** Время и дата размещения задания */
     private String taskCreationDate;
@@ -19,7 +12,7 @@ public class TaskDtoResponse extends TaskBaseDto {
     private String lastTaskUpdateDate;
 
     /*** Статус задания */
-    private TaskStatus taskStatus;
+    private String taskStatus;
 
     /*** Решение задания */
     private String taskDecision;
@@ -32,14 +25,6 @@ public class TaskDtoResponse extends TaskBaseDto {
 
 
     public TaskDtoResponse() {
-    }
-
-    public UUID getExecutorId() {
-        return executorId;
-    }
-
-    public void setExecutorId(UUID executorId) {
-        this.executorId = executorId;
     }
 
     public UserBaseDto getCustomer() {
@@ -66,11 +51,11 @@ public class TaskDtoResponse extends TaskBaseDto {
         this.taskCreationDate = taskCreationDate;
     }
 
-    public TaskStatus getTaskStatus() {
+    public String getTaskStatus() {
         return taskStatus;
     }
 
-    public void setTaskStatus(TaskStatus taskStatus) {
+    public void setTaskStatus(String taskStatus) {
         this.taskStatus = taskStatus;
     }
 

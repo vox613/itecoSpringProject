@@ -4,13 +4,13 @@
 //////////////////////////////////////
 
 Получить всех пользователей
-GET - http://localhost:8081/frilance/users
+GET - http://localhost:8081/frilance/api/v1/users
 
 Получить пользователя с {id}
-GET - http://localhost:8081/frilance/users/{id}
+GET - http://localhost:8081/frilance/api/v1/users/{id}
 
 Создать пользователя
-POST - http://localhost:8081/frilance/users
+POST - http://localhost:8081/frilance/api/v1/users
 {
     "firstName": "firstName",
     "secondName": "secondName",
@@ -20,12 +20,47 @@ POST - http://localhost:8081/frilance/users
     "phoneNumber": "phoneNumber",
     "password": "password   ",
     "repeatPassword": "password",
-    "role": "ROLE_EXECUTOR",
+    "userRoleEnum": "EXECUTOR",
     "wallet": "8000"
 }
 
+
+
+Пакетное создание пользователей
+POST - http://localhost:8081/frilance/api/v1/users/batch
+[
+    {
+        "firstName": "firstName1",
+        "secondName": "secondName1",
+        "lastName": "lastName1",
+        "login": "login1",
+        "email": "email1",
+        "phoneNumber": "phoneNumber1",
+        "password": "password1",
+        "repeatPassword": "password1",
+        "userRoleEnum": "EXECUTOR",
+        "userStatus": "CREATED",
+        "wallet": "0"
+    },
+    {
+        "firstName": "firstName2",
+        "secondName": "secondName2",
+        "lastName": "lastName2",
+        "login": "login2",
+        "email": "email2",
+        "phoneNumber": "phoneNumber2",
+        "password": "password2",
+        "repeatPassword": "password2",
+        "userRoleEnum": "CUSTOMER",
+        "userStatus": "CREATED",
+        "wallet": "8000"
+    }
+]
+
+
+
 Обновить пользователя C {id}
-PUT - http://localhost:8081/frilance/users/{id}
+PUT - http://localhost:8081/frilance/api/v1/users/{id}
 {
     "id": {id},
     "firstName": "firstName",
@@ -36,14 +71,14 @@ PUT - http://localhost:8081/frilance/users/{id}
     "phoneNumber": "phoneNumber",
     "password": "password",
     "repeatPassword": "password",
-    "role": "ROLE_EXECUTOR",
-    "userStatus": "STATUS_CREATED",
+    "userRoleEnum": "EXECUTOR",
+    "userStatus": "CREATED",
     "wallet": "8000"
 }
 
 
 Удалить пользователя с {id}
-DELETE - http://localhost:8081/frilance/users/{id}
+DELETE - http://localhost:8081/frilance/api/v1/users/{id}
 
 
 
@@ -57,19 +92,19 @@ DELETE - http://localhost:8081/frilance/users/{id}
 
 
 Получить все задания
-GET - http://localhost:8081/frilance/tasks
+GET - http://localhost:8081/frilance/api/v1/tasks
 
 
 Получить задание с {id}
-GET - http://localhost:8081/frilance/tasks/{id}
+GET - http://localhost:8081/frilance/api/v1/tasks/{id}
 
 
 Получить все задания пользователя с {userId}
-GET - http://localhost:8081/frilance/tasks?userId={id}
+GET - http://localhost:8081/frilance/api/v1/tasks?userId={id}
 
 
 Создать задание
-POST - http://localhost:8081/frilance/tasks
+POST - http://localhost:8081/frilance/api/v1/tasks
 {
     "customerId": {userId},
     "name": "name",
@@ -80,22 +115,22 @@ POST - http://localhost:8081/frilance/tasks
 
 
 Обновить задание с {taskId} от имени пользователя с {userId}
-Для заказчика возможно только когда задание в статусах TASK_REGISTERED и TASK_ON_CHECK
-Для исполнителя только когда задание в статусах TASK_IN_PROGRESS и TASK_ON_FIX
-PUT - http://localhost:8081/frilance/tasks/{taskId}?userId={userId}
+Для заказчика возможно только когда задание в статусах REGISTERED и ON_CHECK
+Для исполнителя только когда задание в статусах IN_PROGRESS и ON_FIX
+PUT - http://localhost:8081/frilance/api/v1/tasks/{taskId}
 {
     "id": {taskId},
-    "customerId": {userId},
+    "userId": {userId},
     "name": "name",
     "description": "description",
     "taskCompletionDate": "2020-10-30 18:41:36",
-    "taskStatus": "TASK_ON_FIX"
+    "taskStatus": "ON_FIX"
     "price": "123"
 }
 
 
 Удалить задание с {id}
-DELETE - http://localhost:8081/frilance/tasks/{id}
+DELETE - http://localhost:8081/frilance/api/v1/tasks/{id}
 
 
 
@@ -108,36 +143,199 @@ DELETE - http://localhost:8081/frilance/tasks/{id}
 
 
 Получить все контракты
-GET - http://localhost:8081/frilance/contracts
+GET - http://localhost:8081/frilance/api/v1/contracts
 
 
 Получить контракт с {id}
-GET - http://localhost:8081/frilance/contracts/{id}
+GET - http://localhost:8081/frilance/api/v1/contracts/{id}
 
 
 Создать контракт для задания {taskId}
-POST - http://localhost:8081/frilance/contracts
+POST - http://localhost:8081/frilance/api/v1/contracts
 {
     "executorId": {userId},
     "taskId": {taskId},
+    "contractStatus": "PAID",
     "confirmationCode": "confirmationCode",
     "repeatConfirmationCode": "confirmationCode"
 }
 
 
-Обновить статус  контракта (на CONTRACT_TERMINATED или CONTRACT_DONE) с {contractId} от имени владельца контракта {userId}
-Возможно при статусе контракта CONTRACT_PAID и статусе задания TASK_DONE или TASK_CANCELED
-PUT - http://localhost:8081/frilance/contracts/{contractId}?userId={userId}
+Обновить статус  контракта (на TERMINATED или DONE) с {contractId} от имени владельца контракта {userId}
+Возможно при статусе контракта PAID и статусе задания DONE или CANCELED
+PUT - http://localhost:8081/frilance/api/v1/contracts/{contractId}
 {
     "id": {contractId},
-    "executorId": {userId},
+    "userId": {userId},
     "taskId": {taskId},
+    "executorId": {executorId},
     "confirmationCode": "confirmationCode",
     "repeatConfirmationCode": "confirmationCode",
-    "updateContractStatus": "CONTRACT_DONE"
+    "contractStatus": "DONE"
 }
 
 
 Удалить задание с {id}
-DELETE - http://localhost:8081/frilance/tasks/{id}
+DELETE - http://localhost:8081/frilance/api/v1/tasks/{id}
 
+
+
+
+
+///////////////////////////////////////
+            UserRoleController
+//////////////////////////////////////
+
+Получить все роли пользователей
+GET - http://localhost:8081/frilance/api/v1/roles/users
+
+
+Получить роль пользователя с {id}
+GET - http://localhost:8081/frilance/api/v1/roles/users/{id}
+
+
+Создать роль пользователя. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+POST - http://localhost:8081/frilance/api/v1/roles/users
+{
+    "userId": {userId},
+    "value": "MODERATOR"
+}
+
+
+Обновить текстовое значение роли пользователя. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+PUT - http://localhost:8081/frilance/api/v1/roles/users/{roleId}
+{
+    "id": {roleId},
+    "userId": {userId},
+    "value": "MODERATOR"
+}
+
+
+Удалить роль пользователя с {id}
+DELETE - http://localhost:8081/frilance/api/v1/roles/users/{id}
+
+
+
+
+
+///////////////////////////////////////
+            UserStatusController
+//////////////////////////////////////
+
+Получить все статусы пользователей
+GET - http://localhost:8081/frilance/api/v1/statuses/users
+
+
+Получить статус пользователя с {id}
+GET - http://localhost:8081/frilance/api/v1/statuses/users/{id}
+
+
+Создать статус пользователя. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+POST - http://localhost:8081/frilance/api/v1/statuses/users
+{
+    "userId": {statusId},
+    "value": "ACTIVE",
+    "description": "Активен"
+}
+
+
+Обновить текстовое значение статуса пользователя. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+PUT - http://localhost:8081/frilance/api/v1/statuses/users/{statusId}
+{
+    "id": {statusId},
+    "userId": {userId},
+    "value": "BLOCKED",
+    "description": "Заблокирован"
+}
+
+
+Удалить статус пользователя с {id}
+DELETE - http://localhost:8081/frilance/api/v1/statuses/users/{id}
+
+
+
+
+
+
+///////////////////////////////////////
+            TaskStatusController
+//////////////////////////////////////
+
+Получить все статусы заданий
+GET - http://localhost:8081/frilance/api/v1/statuses/tasks
+
+
+Получить статус задания с {id}
+GET - http://localhost:8081/frilance/api/v1/statuses/tasks/{id}
+
+
+Создать статус заданий. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+POST - http://localhost:8081/frilance/api/v1/statuses/tasks
+{
+    "userId": {statusId},
+    "value": "ACTIVE",
+    "description": "Активен"
+}
+
+
+Обновить текстовое значение статуса задания. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+PUT - http://localhost:8081/frilance/api/v1/statuses/tasks/{statusId}
+{
+    "id": {statusId},
+    "userId": {userId},
+    "value": "BLOCKED",
+    "description": "Заблокирован"
+}
+
+
+Удалить статус задания с {id}
+DELETE - http://localhost:8081/frilance/api/v1/statuses/tasks/{id}
+
+
+
+
+
+
+///////////////////////////////////////
+            ContractStatusController
+//////////////////////////////////////
+
+Получить все статусы контрактов
+GET - http://localhost:8081/frilance/api/v1/statuses/contracts
+
+
+Получить статус контракта с {id}
+GET - http://localhost:8081/frilance/api/v1/statuses/contracts/{id}
+
+
+Создать статус контрактов. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+POST - http://localhost:8081/frilance/api/v1/statuses/contracts
+{
+    "userId": {statusId},
+    "value": "ACTIVE",
+    "description": "Активен"
+}
+
+
+Обновить текстовое значение статуса контракта. Необходим userId в теле запроса,
+доступно только пользователя с ролью администратора ADMIN
+PUT - http://localhost:8081/frilance/api/v1/statuses/contracts/{statusId}
+{
+    "id": {statusId},
+    "userId": {userId},
+    "value": "BLOCKED",
+    "description": "Заблокирован"
+}
+
+
+Удалить статус контракта с {id}
+DELETE - http://localhost:8081/frilance/api/v1/statuses/contracts/{id}
+
+//todo Проект в Postman

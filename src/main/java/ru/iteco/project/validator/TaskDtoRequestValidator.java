@@ -107,10 +107,9 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
         if (errors.hasErrors()) return;
 
 
-        String taskStatus = taskForm.getTaskStatus();
-        if ((taskStatus != null) && !TaskStatus.isCorrectValue(taskStatus)) {
-            logger.error("task status is invalid");
-            prepareErrorMessage(errors, "task.status.invalid", "taskStatus");
+        if (StringUtils.isEmpty(taskForm.getTaskStatus())) {
+            logger.error("task status is empty");
+            prepareErrorMessage(errors, "task.status.empty", "taskStatus");
         }
 
     }
