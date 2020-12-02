@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 @Service
-@PropertySource(value = {"classpath:application.properties"})
+@PropertySource(value = {"classpath:application.yml"})
 public class DateTimeMapper {
 
     /*** Установленный формат даты и времени*/

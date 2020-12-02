@@ -15,7 +15,7 @@ import ru.iteco.project.controller.dto.UserDtoRequest;
  * Класс содержит валидаторы для полей объекта запроса UserDtoRequest
  */
 @Component
-@PropertySource(value = {"classpath:application.properties"})
+@PropertySource(value = {"classpath:application.yml"})
 public class UserDtoRequestValidator extends AbstractDtoValidator implements Validator {
     private static final Logger logger = LogManager.getLogger(UserDtoRequestValidator.class.getName());
 
