@@ -1,12 +1,12 @@
 package ru.iteco.project.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.iteco.project.controller.dto.ContractBaseDto;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
 import ru.iteco.project.service.ContractService;
@@ -20,6 +20,7 @@ import java.util.UUID;
  * Класс реализует функционал слоя контроллеров для взаимодействия с Contract
  */
 @RestController
+@RequestMapping(value = "/api/v1/contracts")
 public class ContractController {
 
     /*** Объект сервисного слоя для Contract*/
@@ -29,7 +30,6 @@ public class ContractController {
     private final ContractDtoRequestValidator contractDtoRequestValidator;
 
 
-    @Autowired
     public ContractController(ContractService contractService, ContractDtoRequestValidator contractDtoRequestValidator) {
         this.contractService = contractService;
         this.contractDtoRequestValidator = contractDtoRequestValidator;
@@ -41,7 +41,7 @@ public class ContractController {
      *
      * @return - список ContractDtoResponse
      */
-    @GetMapping("/contracts")
+    @GetMapping
     ResponseEntity<List<ContractDtoResponse>> getAllContracts(@RequestParam(required = false) UUID userId) {
         List<ContractDtoResponse> allContracts = contractService.getAllContracts();
         return ResponseEntity.ok().body(allContracts);
@@ -54,7 +54,7 @@ public class ContractController {
      * @param id - уникальный идентификатор контракта
      * @return ContractDtoResponse заданного контракта или пустой ContractDtoResponse, если данный контракт не существует
      */
-    @GetMapping(value = "/contracts/{id}")
+    @GetMapping(value = "/{id}")
     public ResponseEntity<ContractDtoResponse> getContract(@PathVariable UUID id) {
         ContractDtoResponse contractById = contractService.getContractById(id);
         if (contractById.getId() != null) {
@@ -72,7 +72,7 @@ public class ContractController {
      * @return Тело запроса на создание контракта с уникальным проставленным id,
      * или тело запроса с id = null, если создать контракт не удалось
      */
-    @PostMapping(value = "/contracts")
+    @PostMapping
     public ResponseEntity<ContractDtoRequest> createContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
                                                              UriComponentsBuilder componentsBuilder,
                                                              BindingResult result) {
@@ -97,22 +97,25 @@ public class ContractController {
      * Обновляет существующий контракт {id} от имени пользователя {userId}
      *
      * @param id                 - уникальный идентификатор контракта
-     * @param userId             - уникальный идентификатор заказика
      * @param contractDtoRequest - тело запроса с данными для обновления
      */
-    @PutMapping(value = "/contracts/{id}")
-    public ResponseEntity<ContractDtoRequest> updateContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
-                                                             @RequestParam UUID userId,
-                                                             @PathVariable UUID id,
-                                                             BindingResult result) {
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<? extends ContractBaseDto> updateContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
+                                                                    @PathVariable UUID id,
+                                                                    BindingResult result) {
 
         if (result.hasErrors()) {
             contractDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
         }
 
-        contractService.updateContract(id, userId, contractDtoRequest);
-        return ResponseEntity.ok().body(contractDtoRequest);
+        ContractDtoResponse contractDtoResponse = contractService.updateContract(id, contractDtoRequest);
+
+        if (contractDtoResponse != null) {
+            return ResponseEntity.ok().body(contractDtoResponse);
+        } else {
+            return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
+        }
     }
 
 
@@ -122,11 +125,10 @@ public class ContractController {
      * @param id - уникальный идентификатор контракта для удаления
      * @return - объект ContractDtoResponse с данными удаленного контракта
      */
-    @DeleteMapping(value = "/contracts/{id}")
+    @DeleteMapping(value = "/{id}")
     public ResponseEntity<ContractDtoResponse> deleteContract(@PathVariable UUID id) {
-        ContractDtoResponse contractDtoResponse = contractService.deleteContract(id);
-        if (contractDtoResponse.getId() != null) {
-            return ResponseEntity.ok().body(contractDtoResponse);
+        if (contractService.deleteContract(id)) {
+            return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.notFound().build();
         }

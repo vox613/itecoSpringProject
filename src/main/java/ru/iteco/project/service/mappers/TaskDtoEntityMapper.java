@@ -1,6 +1,5 @@
 package ru.iteco.project.service.mappers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ public class TaskDtoEntityMapper implements DtoEntityMapper<Task, TaskDtoRequest
     @Value("${format.date.time}")
     private String formatDateTime;
 
-    @Autowired
+
     public TaskDtoEntityMapper(UserDAO userDAO) {
         this.userDAO = userDAO;
     }

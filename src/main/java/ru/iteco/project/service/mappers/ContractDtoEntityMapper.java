@@ -1,6 +1,5 @@
 package ru.iteco.project.service.mappers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
     @Value("${format.date.time}")
     private String formatDateTime;
 
-    @Autowired
+
     public ContractDtoEntityMapper(UserDAO userDAO, TaskDAO taskDAO) {
         this.userDAO = userDAO;
         this.taskDAO = taskDAO;
@@ -73,9 +72,10 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
 
     /**
      * Маппер для обновления заказчиком статуса договора
+     *
      * @param requestDto - объект запроса
-     * @param contract - сущность договора
-     * @param role - роль пользователя инициировавшего процесс
+     * @param contract   - сущность договора
+     * @param role       - роль пользователя инициировавшего процесс
      */
     public void requestDtoToEntity(ContractDtoRequest requestDto, Contract contract, Role role) {
         if (requestDto != null) {

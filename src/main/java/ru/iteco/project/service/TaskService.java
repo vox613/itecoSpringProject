@@ -78,17 +78,18 @@ public interface TaskService {
      * Метод обновления существующего задания
      *
      * @param id             - уникальный идентификатор задания
-     * @param userId         - уникальный идентификатор Пользователя
      * @param taskDtoRequest -  тело запроса для обновления
+     * @return TaskDtoResponse - dto объект с данными о задании
      */
-    void updateTask(UUID id, UUID userId, TaskDtoRequest taskDtoRequest);
+    TaskDtoResponse updateTask(UUID id, TaskDtoRequest taskDtoRequest);
 
     /**
      * Метод удаляет пользователя из коллекции
      *
      * @param id - id пользователя для удаления
-     * @return - UserDto удаленного пользователя
+     * @return - true - задание успешно удалено,
+     * false - произошла ошибка при удалении задания/задания не существует
      */
-    TaskDtoResponse deleteTask(UUID id);
+    Boolean deleteTask(UUID id);
 
 }

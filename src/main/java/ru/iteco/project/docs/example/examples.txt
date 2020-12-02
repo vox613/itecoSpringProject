@@ -4,13 +4,13 @@
 //////////////////////////////////////
 
 Получить всех пользователей
-GET - http://localhost:8081/frilance/users
+GET - http://localhost:8081/frilance/api/v1/users
 
 Получить пользователя с {id}
-GET - http://localhost:8081/frilance/users/{id}
+GET - http://localhost:8081/frilance/api/v1/users/{id}
 
 Создать пользователя
-POST - http://localhost:8081/frilance/users
+POST - http://localhost:8081/frilance/api/v1/users
 {
     "firstName": "firstName",
     "secondName": "secondName",
@@ -25,7 +25,7 @@ POST - http://localhost:8081/frilance/users
 }
 
 Обновить пользователя C {id}
-PUT - http://localhost:8081/frilance/users/{id}
+PUT - http://localhost:8081/frilance/api/v1/users/{id}
 {
     "id": {id},
     "firstName": "firstName",
@@ -43,7 +43,7 @@ PUT - http://localhost:8081/frilance/users/{id}
 
 
 Удалить пользователя с {id}
-DELETE - http://localhost:8081/frilance/users/{id}
+DELETE - http://localhost:8081/frilance/api/v1/users/{id}
 
 
 
@@ -57,19 +57,19 @@ DELETE - http://localhost:8081/frilance/users/{id}
 
 
 Получить все задания
-GET - http://localhost:8081/frilance/tasks
+GET - http://localhost:8081/frilance/api/v1/tasks
 
 
 Получить задание с {id}
-GET - http://localhost:8081/frilance/tasks/{id}
+GET - http://localhost:8081/frilance/api/v1/tasks/{id}
 
 
 Получить все задания пользователя с {userId}
-GET - http://localhost:8081/frilance/tasks?userId={id}
+GET - http://localhost:8081/frilance/api/v1/tasks?userId={id}
 
 
 Создать задание
-POST - http://localhost:8081/frilance/tasks
+POST - http://localhost:8081/frilance/api/v1/tasks
 {
     "customerId": {userId},
     "name": "name",
@@ -82,10 +82,11 @@ POST - http://localhost:8081/frilance/tasks
 Обновить задание с {taskId} от имени пользователя с {userId}
 Для заказчика возможно только когда задание в статусах TASK_REGISTERED и TASK_ON_CHECK
 Для исполнителя только когда задание в статусах TASK_IN_PROGRESS и TASK_ON_FIX
-PUT - http://localhost:8081/frilance/tasks/{taskId}?userId={userId}
+PUT - http://localhost:8081/frilance/api/v1/tasks/{taskId}
 {
     "id": {taskId},
-    "customerId": {userId},
+    "customerId": {customerId},
+    "userId": {userId},
     "name": "name",
     "description": "description",
     "taskCompletionDate": "2020-10-30 18:41:36",
@@ -95,7 +96,7 @@ PUT - http://localhost:8081/frilance/tasks/{taskId}?userId={userId}
 
 
 Удалить задание с {id}
-DELETE - http://localhost:8081/frilance/tasks/{id}
+DELETE - http://localhost:8081/frilance/api/v1/tasks/{id}
 
 
 
@@ -108,15 +109,15 @@ DELETE - http://localhost:8081/frilance/tasks/{id}
 
 
 Получить все контракты
-GET - http://localhost:8081/frilance/contracts
+GET - http://localhost:8081/frilance/api/v1/contracts
 
 
 Получить контракт с {id}
-GET - http://localhost:8081/frilance/contracts/{id}
+GET - http://localhost:8081/frilance/api/v1/contracts/{id}
 
 
 Создать контракт для задания {taskId}
-POST - http://localhost:8081/frilance/contracts
+POST - http://localhost:8081/frilance/api/v1/contracts
 {
     "executorId": {userId},
     "taskId": {taskId},
@@ -127,9 +128,10 @@ POST - http://localhost:8081/frilance/contracts
 
 Обновить статус  контракта (на CONTRACT_TERMINATED или CONTRACT_DONE) с {contractId} от имени владельца контракта {userId}
 Возможно при статусе контракта CONTRACT_PAID и статусе задания TASK_DONE или TASK_CANCELED
-PUT - http://localhost:8081/frilance/contracts/{contractId}?userId={userId}
+PUT - http://localhost:8081/frilance/api/v1/contracts/{contractId}
 {
     "id": {contractId},
+    "userId": {userId},
     "executorId": {userId},
     "taskId": {taskId},
     "confirmationCode": "confirmationCode",
@@ -139,5 +141,5 @@ PUT - http://localhost:8081/frilance/contracts/{contractId}?userId={userId}
 
 
 Удалить задание с {id}
-DELETE - http://localhost:8081/frilance/tasks/{id}
+DELETE - http://localhost:8081/frilance/api/v1/tasks/{id}
 
