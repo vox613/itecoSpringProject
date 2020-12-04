@@ -1,5 +1,7 @@
 package ru.iteco.project.controller;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -9,11 +11,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.ContractBaseDto;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
+import ru.iteco.project.exception.MismatchedIdException;
 import ru.iteco.project.service.ContractService;
 import ru.iteco.project.validator.ContractDtoRequestValidator;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -21,6 +25,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping(value = "/api/v1/contracts")
+@PropertySource(value = {"classpath:errors.properties"})
 public class ContractController {
 
     /*** Объект сервисного слоя для Contract*/
@@ -28,6 +33,9 @@ public class ContractController {
 
     /*** Объект валидатора для ContractDtoRequest*/
     private final ContractDtoRequestValidator contractDtoRequestValidator;
+
+    @Value("${errors.id.mismatched}")
+    private String mismatchedIdMessage;
 
 
     public ContractController(ContractService contractService, ContractDtoRequestValidator contractDtoRequestValidator) {
@@ -107,6 +115,10 @@ public class ContractController {
         if (result.hasErrors()) {
             contractDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
+        }
+
+        if (!Objects.equals(id, contractDtoRequest.getId())) {
+            throw new MismatchedIdException(mismatchedIdMessage);
         }
 
         ContractDtoResponse contractDtoResponse = contractService.updateContract(id, contractDtoRequest);

@@ -43,6 +43,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Перехватчик исключения UnavailableRoleOperationException, возникающего при попытке совершения недопустимой операции
+     * для текущей роли пользователя
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(MismatchedIdException.class)
+    public ResponseEntity<ResponseError> mismatchedIdException(MismatchedIdException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
      * Перехватчик всех остальных не предусмотренных Exception, возникающих при работе приложения
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме

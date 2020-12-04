@@ -1,5 +1,7 @@
 package ru.iteco.project.controller;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -9,12 +11,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.UserBaseDto;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
+import ru.iteco.project.exception.MismatchedIdException;
 import ru.iteco.project.service.UserService;
 import ru.iteco.project.validator.UserDtoRequestValidator;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -22,6 +26,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping(value = "/api/v1/users")
+@PropertySource(value = {"classpath:errors.properties"})
 public class UserController {
 
     /*** Объект сервисного слоя для User*/
@@ -29,6 +34,9 @@ public class UserController {
 
     /*** Объект валидатора для UserDtoRequest*/
     private final UserDtoRequestValidator userDtoRequestValidator;
+
+    @Value("${errors.id.mismatched}")
+    private String mismatchedIdMessage;
 
 
     public UserController(UserService userService, UserDtoRequestValidator userDtoRequestValidator) {
@@ -102,6 +110,10 @@ public class UserController {
         if (result.hasErrors()) {
             userDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(userDtoRequest);
+        }
+
+        if (!Objects.equals(id, userDtoRequest.getId())) {
+            throw new MismatchedIdException(mismatchedIdMessage);
         }
 
         UserDtoResponse userDtoResponse = userService.updateUser(id, userDtoRequest);

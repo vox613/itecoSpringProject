@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
-import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.model.Task;
 import ru.iteco.project.model.User;
@@ -14,7 +13,10 @@ import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 import ru.iteco.project.service.validators.CustomValidator;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -150,7 +152,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDtoResponse updateUser(UUID id, UserDtoRequest userDtoRequest) {
         UserDtoResponse userDtoResponse = null;
-        if (userDAO.userWithIdIsExist(id) && Objects.equals(id, userDtoRequest.getId())) {
+        if (userDAO.userWithIdIsExist(id)) {
             User user = userMapper.requestDtoToEntity(userDtoRequest);
             user.setId(id);
             userDAO.update(user);
