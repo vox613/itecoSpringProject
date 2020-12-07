@@ -11,13 +11,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.TaskBaseDto;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
-import ru.iteco.project.exception.MismatchedIdException;
 import ru.iteco.project.service.TaskService;
 import ru.iteco.project.validator.TaskDtoRequestValidator;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -98,34 +96,27 @@ public class TaskController {
         }
 
         TaskDtoRequest task = taskService.createTask(taskDtoRequest);
-
-        URI uri = componentsBuilder
-                .path(String.format("/tasks/%s", task.getId()))
-                .buildAndExpand(task)
-                .toUri();
-
-        return ResponseEntity.created(uri).body(task);
+        if (task.getId() != null) {
+            URI uri = componentsBuilder.path(String.format("/tasks/%s", task.getId())).buildAndExpand(task).toUri();
+            return ResponseEntity.created(uri).body(task);
+        } else {
+            return ResponseEntity.badRequest().body(task);
+        }
     }
 
 
     /**
      * Обновляет существующее задание {id} от имени заказчика {userId}
      *
-     * @param id             - уникальный идентификатор задания
      * @param taskDtoRequest - тело запроса с данными для обновления
      */
     @PutMapping(value = "/{id}")
-    public ResponseEntity<? extends TaskBaseDto> updateTask(@PathVariable UUID id,
-                                                            @Validated @RequestBody TaskDtoRequest taskDtoRequest,
+    public ResponseEntity<? extends TaskBaseDto> updateTask(@Validated @RequestBody TaskDtoRequest taskDtoRequest,
                                                             BindingResult result) {
 
         if (result.hasErrors()) {
             taskDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(taskDtoRequest);
-        }
-
-        if (!Objects.equals(id, taskDtoRequest.getId())) {
-            throw new MismatchedIdException(mismatchedIdMessage);
         }
 
         TaskDtoResponse taskDtoResponse = taskService.updateTask(taskDtoRequest);

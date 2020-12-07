@@ -11,13 +11,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.ContractBaseDto;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
-import ru.iteco.project.exception.MismatchedIdException;
 import ru.iteco.project.service.ContractService;
 import ru.iteco.project.validator.ContractDtoRequestValidator;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -91,34 +89,27 @@ public class ContractController {
         }
 
         ContractDtoRequest contract = contractService.createContract(contractDtoRequest);
-
-        URI uri = componentsBuilder
-                .path(String.format("/contracts/%s", contract.getId()))
-                .buildAndExpand(contract)
-                .toUri();
-
-        return ResponseEntity.created(uri).body(contract);
+        if (contract.getId() != null) {
+            URI uri = componentsBuilder.path(String.format("/contracts/%s", contract.getId())).buildAndExpand(contract).toUri();
+            return ResponseEntity.created(uri).body(contract);
+        } else {
+            return ResponseEntity.badRequest().body(contract);
+        }
     }
 
 
     /**
      * Обновляет существующий контракт {id} от имени пользователя {userId}
      *
-     * @param id                 - уникальный идентификатор контракта
      * @param contractDtoRequest - тело запроса с данными для обновления
      */
     @PutMapping(value = "/{id}")
     public ResponseEntity<? extends ContractBaseDto> updateContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
-                                                                    @PathVariable UUID id,
                                                                     BindingResult result) {
 
         if (result.hasErrors()) {
             contractDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
-        }
-
-        if (!Objects.equals(id, contractDtoRequest.getId())) {
-            throw new MismatchedIdException(mismatchedIdMessage);
         }
 
         ContractDtoResponse contractDtoResponse = contractService.updateContract(contractDtoRequest);
