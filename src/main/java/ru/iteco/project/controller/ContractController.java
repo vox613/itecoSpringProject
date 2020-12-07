@@ -121,7 +121,7 @@ public class ContractController {
             throw new MismatchedIdException(mismatchedIdMessage);
         }
 
-        ContractDtoResponse contractDtoResponse = contractService.updateContract(id, contractDtoRequest);
+        ContractDtoResponse contractDtoResponse = contractService.updateContract(contractDtoRequest);
 
         if (contractDtoResponse != null) {
             return ResponseEntity.ok().body(contractDtoResponse);

@@ -157,14 +157,11 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public TaskDtoResponse updateTask(UUID id, TaskDtoRequest taskDtoRequest) {
+    public TaskDtoResponse updateTask(TaskDtoRequest taskDtoRequest) {
         TaskDtoResponse taskDtoResponse = null;
-        if (Objects.equals(id, taskDtoRequest.getId())
-                && taskDtoRequest.getUserId() != null
-                && taskDAO.taskWithIdIsExist(id)) {
-
+        if (taskDtoRequest.getUserId() != null && taskDAO.taskWithIdIsExist(taskDtoRequest.getId())) {
             Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getUserId());
-            Optional<Task> taskById = taskDAO.findTaskById(id);
+            Optional<Task> taskById = taskDAO.findTaskById(taskDtoRequest.getId());
             if (userOptional.isPresent() && taskById.isPresent()) {
                 User user = userOptional.get();
                 Task task = taskById.get();

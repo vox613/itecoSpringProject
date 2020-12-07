@@ -147,14 +147,11 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public ContractDtoResponse updateContract(UUID id, ContractDtoRequest contractDtoRequest) {
+    public ContractDtoResponse updateContract(ContractDtoRequest contractDtoRequest) {
         ContractDtoResponse contractDtoResponse = null;
-        if (Objects.equals(id, contractDtoRequest.getId())
-                && contractDtoRequest.getUserId() != null
-                && contractDAO.contractWithIdIsExist(id)) {
-
+        if (contractDtoRequest.getUserId() != null  && contractDAO.contractWithIdIsExist(contractDtoRequest.getId())) {
             Optional<User> userOptional = userDAO.findUserById(contractDtoRequest.getUserId());
-            Optional<Contract> contractById = contractDAO.findContractById(id);
+            Optional<Contract> contractById = contractDAO.findContractById(contractDtoRequest.getId());
             if (userOptional.isPresent() && contractById.isPresent()) {
                 User user = userOptional.get();
                 Contract contract = contractById.get();

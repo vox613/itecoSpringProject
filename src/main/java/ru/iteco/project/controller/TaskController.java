@@ -128,7 +128,7 @@ public class TaskController {
             throw new MismatchedIdException(mismatchedIdMessage);
         }
 
-        TaskDtoResponse taskDtoResponse = taskService.updateTask(id, taskDtoRequest);
+        TaskDtoResponse taskDtoResponse = taskService.updateTask(taskDtoRequest);
 
         if (taskDtoResponse != null) {
             return ResponseEntity.ok().body(taskDtoResponse);

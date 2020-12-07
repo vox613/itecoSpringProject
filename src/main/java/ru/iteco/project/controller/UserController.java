@@ -116,7 +116,7 @@ public class UserController {
             throw new MismatchedIdException(mismatchedIdMessage);
         }
 
-        UserDtoResponse userDtoResponse = userService.updateUser(id, userDtoRequest);
+        UserDtoResponse userDtoResponse = userService.updateUser(userDtoRequest);
 
         if (userDtoResponse != null) {
             return ResponseEntity.ok().body(userDtoResponse);

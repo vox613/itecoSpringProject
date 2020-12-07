@@ -150,11 +150,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDtoResponse updateUser(UUID id, UserDtoRequest userDtoRequest) {
+    public UserDtoResponse updateUser(UserDtoRequest userDtoRequest) {
         UserDtoResponse userDtoResponse = null;
-        if (userDAO.userWithIdIsExist(id)) {
+        if (userDAO.userWithIdIsExist(userDtoRequest.getId())) {
             User user = userMapper.requestDtoToEntity(userDtoRequest);
-            user.setId(id);
+            user.setId(userDtoRequest.getId());
             userDAO.update(user);
             userDtoResponse = userMapper.entityToResponseDto(user);
         }
