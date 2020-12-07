@@ -1,12 +1,12 @@
 package ru.iteco.project.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.iteco.project.controller.dto.UserBaseDto;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.service.UserService;
@@ -21,6 +21,7 @@ import java.util.UUID;
  * Класс реализует функционал слоя контроллеров для взаимодействия с User
  */
 @RestController
+@RequestMapping(value = "/api/v1/users")
 public class UserController {
 
     /*** Объект сервисного слоя для User*/
@@ -30,7 +31,7 @@ public class UserController {
     private final UserDtoRequestValidator userDtoRequestValidator;
 
 
-    @Autowired
+
     public UserController(UserService userService, UserDtoRequestValidator userDtoRequestValidator) {
         this.userService = userService;
         this.userDtoRequestValidator = userDtoRequestValidator;
@@ -42,7 +43,7 @@ public class UserController {
      *
      * @return - список UserDtoResponse
      */
-    @GetMapping("/users")
+    @GetMapping
     ResponseEntity<List<UserDtoResponse>> getAllUsers() {
         ArrayList<UserDtoResponse> allUsers = userService.getAllUsers();
         return ResponseEntity.ok().body(allUsers);
@@ -55,7 +56,7 @@ public class UserController {
      * @param id - уникальный идентификатор пользователя
      * @return ContractDtoResponse заданного пользователя или пустой ContractDtoResponse, если данный пользователь не существует
      */
-    @GetMapping(value = "/users/{id}")
+    @GetMapping(value = "/{id}")
     public ResponseEntity<UserDtoResponse> getUser(@PathVariable UUID id) {
         UserDtoResponse userById = userService.getUserById(id);
         if (userById.getId() != null) {
@@ -73,7 +74,7 @@ public class UserController {
      * @return Тело запроса на создание пользователя с уникальным проставленным id,
      * * или тело запроса с id = null, если создать пользователя не удалось
      */
-    @PostMapping(value = "/users")
+    @PostMapping
     public ResponseEntity<UserDtoRequest> createUser(@Validated @RequestBody UserDtoRequest userDtoRequest,
                                                      BindingResult result,
                                                      UriComponentsBuilder componentsBuilder) {
@@ -83,29 +84,36 @@ public class UserController {
         }
 
         UserDtoRequest user = userService.createUser(userDtoRequest);
-        URI uri = componentsBuilder.path("/users/" + user.getId()).buildAndExpand(user).toUri();
-        return ResponseEntity.created(uri).body(user);
+        if (user.getId() != null) {
+            URI uri = componentsBuilder.path("/users/" + user.getId()).buildAndExpand(user).toUri();
+            return ResponseEntity.created(uri).body(user);
+        } else {
+            return ResponseEntity.badRequest().body(user);
+        }
     }
 
 
     /**
      * Обновляет существующего пользователя {id}
      *
-     * @param id             - уникальный идентификатор пользователя
      * @param userDtoRequest - тело запроса с данными для обновления
      */
-    @PutMapping(value = "/users/{id}")
-    public ResponseEntity<UserDtoRequest> updateUser(@PathVariable UUID id,
-                                                     @Validated @RequestBody UserDtoRequest userDtoRequest,
-                                                     BindingResult result) {
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<? extends UserBaseDto> updateUser(@Validated @RequestBody UserDtoRequest userDtoRequest,
+                                                            BindingResult result) {
 
         if (result.hasErrors()) {
             userDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(userDtoRequest);
         }
 
-        userService.updateUser(id, userDtoRequest);
-        return ResponseEntity.ok().body(userDtoRequest);
+        UserDtoResponse userDtoResponse = userService.updateUser(userDtoRequest);
+
+        if (userDtoResponse != null) {
+            return ResponseEntity.ok().body(userDtoResponse);
+        } else {
+            return ResponseEntity.unprocessableEntity().body(userDtoRequest);
+        }
     }
 
 
@@ -113,13 +121,12 @@ public class UserController {
      * Удаляет пользователя с заданным id
      *
      * @param id - уникальный идентификатор пользователя для удаления
-     * @return - объект UserDtoResponse с данными удаленного пользователя
+     * @return - статус 200 если пользователь успешно удален и 404 если такого пользователя нет
      */
-    @DeleteMapping(value = "/users/{id}")
-    public ResponseEntity<UserDtoResponse> deleteUser(@PathVariable UUID id) {
-        UserDtoResponse userDtoResponse = userService.deleteUser(id);
-        if (userDtoResponse.getId() != null) {
-            return ResponseEntity.ok().body(userDtoResponse);
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<Object> deleteUser(@PathVariable UUID id) {
+        if (userService.deleteUser(id)) {
+            return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.notFound().build();
         }

@@ -1,6 +1,5 @@
 package ru.iteco.project.service.mappers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
@@ -22,7 +21,7 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
      */
     private final TaskDAO taskDAO;
 
-    @Autowired
+
     public UserDtoEntityMapper(TaskDAO taskDAO) {
         this.taskDAO = taskDAO;
     }

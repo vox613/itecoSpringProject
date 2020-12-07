@@ -59,18 +59,19 @@ public interface ContractService {
 
     /**
      * Метод обновления существующего контракта
-     * @param id - уникальный идентификатор Контракта
-     * @param userId - уникальный идентификатор Пользователя
+     *
      * @param contractDtoRequest -  тело запроса для обновления
+     * @return ContractDtoResponse - dto объект с данными о контракте
      */
-    void updateContract(UUID id, UUID userId, ContractDtoRequest contractDtoRequest);
+    ContractDtoResponse updateContract(ContractDtoRequest contractDtoRequest);
 
     /**
      * Метод удаляет договор из коллекции
      *
      * @param id - id договора для удаления
-     * @return - ContractDto удаленного договора
+     * @return - true - контракт успешно удален,
+     * false - произошла ошибка при удалении контракта/контракта не существует
      */
-    ContractDtoResponse deleteContract(UUID id);
+    Boolean deleteContract(UUID id);
 
 }

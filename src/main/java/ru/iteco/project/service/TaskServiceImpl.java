@@ -2,12 +2,12 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
+import ru.iteco.project.dao.ContractDAO;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.exception.UnavailableRoleOperationException;
@@ -34,15 +34,17 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskDAO taskDAO;
     private final UserDAO userDAO;
+    private final ContractDAO contractDAO;
     private final CustomValidator taskValidator;
     private final TaskDtoEntityMapper taskMapper;
     private final UserDtoEntityMapper userMapper;
 
-    @Autowired
-    public TaskServiceImpl(TaskDAO taskDAO, UserDAO userDAO, CustomValidator taskValidator, TaskDtoEntityMapper taskMapper,
-                           UserDtoEntityMapper userMapper) {
+
+    public TaskServiceImpl(TaskDAO taskDAO, UserDAO userDAO, ContractDAO contractDAO, CustomValidator taskValidator,
+                           TaskDtoEntityMapper taskMapper, UserDtoEntityMapper userMapper) {
         this.taskDAO = taskDAO;
         this.userDAO = userDAO;
+        this.contractDAO = contractDAO;
         this.taskValidator = taskValidator;
         this.taskMapper = taskMapper;
         this.userMapper = userMapper;
@@ -155,28 +157,36 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public void updateTask(UUID id, UUID userId, TaskDtoRequest taskDtoRequest) {
-        if (taskDAO.taskWithIdIsExist(id) && Objects.equals(id, taskDtoRequest.getId())) {
-            Optional<User> userOptional = userDAO.findUserById(userId);
-            Optional<Task> taskById = taskDAO.findTaskById(id);
+    public TaskDtoResponse updateTask(TaskDtoRequest taskDtoRequest) {
+        TaskDtoResponse taskDtoResponse = null;
+        if (taskDtoRequest.getUserId() != null && taskDAO.taskWithIdIsExist(taskDtoRequest.getId())) {
+            Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getUserId());
+            Optional<Task> taskById = taskDAO.findTaskById(taskDtoRequest.getId());
             if (userOptional.isPresent() && taskById.isPresent()) {
                 User user = userOptional.get();
                 Task task = taskById.get();
                 if (allowToUpdate(user, task)) {
                     taskMapper.requestDtoToEntity(taskDtoRequest, task, user.getRole());
                     taskDAO.update(task);
+                    taskDtoResponse = enrichByUsersInfo(task);
                 }
             }
         }
+        return taskDtoResponse;
     }
 
     @Override
-    public TaskDtoResponse deleteTask(UUID id) {
-        TaskDtoResponse taskDtoResponse = getTaskById(id);
-        if (taskDtoResponse.getId() != null) {
+    public Boolean deleteTask(UUID id) {
+        Optional<Task> taskById = taskDAO.findTaskById(id);
+        if (taskById.isPresent()) {
+            Contract contractByTask = contractDAO.findContractByTask(taskById.get());
+            if (contractByTask != null){
+                contractDAO.delete(contractByTask);
+            }
             taskDAO.deleteByPK(id);
+            return true;
         }
-        return taskDtoResponse;
+        return false;
     }
 
     public TaskDAO getTaskDAO() {
@@ -221,11 +231,27 @@ public class TaskServiceImpl implements TaskService {
 
     /**
      * Метод проверяет доступна ли для пользователя операция создания задания
+     *
      * @param user - сущность пользователя
      */
     private void checkUserPermissions(User user) {
         if (Role.EXECUTOR.equals(user.getRole()) || UserStatus.BLOCKED.equals(user.getUserStatus())) {
             throw new UnavailableRoleOperationException(unavailableOperationMessage);
         }
+    }
+
+    /**
+     * Метод формирует ответ TaskDtoResponse и обогащает его данными о заказчике и исполнителе
+     *
+     * @param task - объект задания
+     * @return - объект TaskDtoResponse с подготовленными данными о задании, исполнителе и заказчике
+     */
+    public TaskDtoResponse enrichByUsersInfo(Task task) {
+        TaskDtoResponse taskDtoResponse = taskMapper.entityToResponseDto(task);
+        taskDtoResponse.setCustomer(userMapper.entityToResponseDto(task.getCustomer()));
+        if (task.getExecutor() != null) {
+            taskDtoResponse.setExecutor(userMapper.entityToResponseDto(task.getExecutor()));
+        }
+        return taskDtoResponse;
     }
 }

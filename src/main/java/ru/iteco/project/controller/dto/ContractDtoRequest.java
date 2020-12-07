@@ -3,11 +3,15 @@ package ru.iteco.project.controller.dto;
 import org.springframework.validation.ObjectError;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Класс хранящий данные для формирования запроса создания/обновления сущности Contract
  */
 public class ContractDtoRequest extends ContractBaseDto {
+
+    /*** Уникальный id пользователя инициировавшего действие */
+    private UUID userId;
 
     /*** Код подтверждения */
     private String confirmationCode;
@@ -28,6 +32,14 @@ public class ContractDtoRequest extends ContractBaseDto {
     }
 
     public ContractDtoRequest() {
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 
     public String getConfirmationCode() {

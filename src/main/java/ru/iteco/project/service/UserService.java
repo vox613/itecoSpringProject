@@ -90,10 +90,10 @@ public interface UserService {
     /**
      * Метод обновления данны пользователя
      *
-     * @param id             - уникальный идентификатор пользователя
      * @param userDtoRequest - запрос с обновленными данными клиента
+     * @return - объект UserDtoResponse с обновленной сущностью пользователя
      */
-    void updateUser(UUID id, UserDtoRequest userDtoRequest);
+    UserDtoResponse updateUser(UserDtoRequest userDtoRequest);
 
     /**
      * Метод получения данных обо всех пользователях
@@ -106,8 +106,9 @@ public interface UserService {
      * Метод удаляет пользователя из коллекции
      *
      * @param id - id пользователя для удаления
-     * @return - UserDto удаленного пользователя
+     * @return - true - пользователь успешно удален,
+     * false - произошла ошибка при удалении пользователя/полььзователя не существует
      */
-    UserDtoResponse deleteUser(UUID id);
+    Boolean deleteUser(UUID id);
 
 }

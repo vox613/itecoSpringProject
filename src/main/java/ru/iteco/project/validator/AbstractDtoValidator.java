@@ -1,6 +1,5 @@
 package ru.iteco.project.validator;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.validation.Errors;
 
@@ -11,10 +10,12 @@ import java.util.Locale;
  */
 public abstract class AbstractDtoValidator {
 
-    /** Объект-источник текстовок для ошибок */
+    /**
+     * Объект-источник текстовок для ошибок
+     */
     private final MessageSource messageSource;
 
-    @Autowired
+
     public AbstractDtoValidator(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
@@ -22,8 +23,9 @@ public abstract class AbstractDtoValidator {
 
     /**
      * Метод подготавливает сообщение об ошибке и устанавливает его в общий список
-     * @param errors - объект ошибок
-     * @param errCode - код ошибки
+     *
+     * @param errors    - объект ошибок
+     * @param errCode   - код ошибки
      * @param fieldName - имя поля при проверке которого возникла ошибка
      */
     protected void prepareErrorMessage(Errors errors, String errCode, String fieldName) {
