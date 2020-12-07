@@ -2,19 +2,22 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
-import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
+import ru.iteco.project.model.Task;
 import ru.iteco.project.model.User;
 import ru.iteco.project.model.UserStatus;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 import ru.iteco.project.service.validators.CustomValidator;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с пользователями
@@ -25,16 +28,15 @@ public class UserServiceImpl implements UserService {
     private static final Logger log = LogManager.getLogger(UserServiceImpl.class.getName());
 
     private final UserDAO userDAO;
-    private final TaskDAO taskDAO;
+    private final TaskServiceImpl taskService;
     private final CustomValidator userValidator;
     private final UserDtoEntityMapper userMapper;
 
 
-    @Autowired
-    public UserServiceImpl(UserDAO userDAO, TaskDAO taskDAO, CustomValidator userValidator,
+    public UserServiceImpl(UserDAO userDAO, TaskServiceImpl taskService, CustomValidator userValidator,
                            UserDtoEntityMapper userMapper) {
         this.userDAO = userDAO;
-        this.taskDAO = taskDAO;
+        this.taskService = taskService;
         this.userValidator = userValidator;
         this.userMapper = userMapper;
     }
@@ -132,11 +134,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDtoRequest createUser(UserDtoRequest userDtoRequest) {
-        if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())
-                && isCorrectPasswords(userDtoRequest.getPassword(), userDtoRequest.getRepeatPassword())) {
-
+        if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())) {
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
             newUser.setUserStatus(UserStatus.STATUS_CREATED);
+            userDtoRequest.setUserStatus(UserStatus.STATUS_CREATED.name());
             userDAO.save(newUser);
             userDtoRequest.setId(newUser.getId());
         }
@@ -144,12 +145,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(UUID id, UserDtoRequest userDtoRequest) {
-        if (userDAO.userWithIdIsExist(id) && Objects.equals(id, userDtoRequest.getId())) {
+    public List<UserDtoRequest> createBundleUsers(List<UserDtoRequest> userDtoRequestList) {
+        return userDtoRequestList.stream().map(this::createUser).collect(Collectors.toList());
+    }
+
+    @Override
+    public UserDtoResponse updateUser(UserDtoRequest userDtoRequest) {
+        UserDtoResponse userDtoResponse = null;
+        if (userDAO.userWithIdIsExist(userDtoRequest.getId())) {
             User user = userMapper.requestDtoToEntity(userDtoRequest);
-            user.setId(id);
+            user.setId(userDtoRequest.getId());
             userDAO.update(user);
+            userDtoResponse = userMapper.entityToResponseDto(user);
         }
+        return userDtoResponse;
     }
 
     @Override
@@ -162,15 +171,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDtoResponse deleteUser(UUID id) {
-        UserDtoResponse userDtoResponse = new UserDtoResponse();
-        Optional<User> optionalUser = Optional.ofNullable(userDAO.deleteByPK(id));
+    public Boolean deleteUser(UUID id) {
+        Optional<User> optionalUser = userDAO.findUserById(id);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            userDtoResponse = userMapper.entityToResponseDto(user);
-            userDtoResponse.getTasksIdList().forEach(taskDAO::deleteByPK);
+            List<Task> allTasksByCustomer = taskService.getTaskDAO().findAllTasksByCustomer(user);
+            allTasksByCustomer.forEach(task -> taskService.deleteTask(task.getId()));
+            userDAO.deleteByPK(id);
+            return true;
         }
-        return userDtoResponse;
+        return false;
     }
 
     public CustomValidator<User> getUserValidator() {
@@ -186,25 +196,13 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Метод проверяет что логин и email не пустые и пользователя с такими данными не существует
+     * Метод проверяет что пользователя с таким логином и email не существует
      *
      * @param login - логин пользователя
      * @param email - email пользователя
      * @return - true - логин и email не пусты и пользователя с такими данными не существует, false - в любом ином случае
      */
     private boolean isCorrectLoginEmail(String login, String email) {
-        return (login != null) && (email != null) &&
-                !(userDAO.emailExist(email) || userDAO.loginExist(login));
-    }
-
-    /**
-     * Метод проверяет что введенные пароли не пусты и совпадают
-     *
-     * @param password       - пароль
-     * @param repeatPassword - подтверждение пароля
-     * @return - true - пароли не пусты и совпадают, false - в любом ином случае
-     */
-    private boolean isCorrectPasswords(String password, String repeatPassword) {
-        return (password != null) && password.equals(repeatPassword);
+        return !(userDAO.emailExist(email) || userDAO.loginExist(login));
     }
 }

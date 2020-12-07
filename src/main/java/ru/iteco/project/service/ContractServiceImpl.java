@@ -2,7 +2,6 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
@@ -29,13 +28,12 @@ public class ContractServiceImpl implements ContractService {
     private final ContractDAO contractDAO;
     private final TaskDAO taskDAO;
     private final ContractDtoEntityMapper contractMapper;
-    private final TaskService taskService;
+    private final TaskServiceImpl taskService;
     private final UserService userService;
 
 
-    @Autowired
     public ContractServiceImpl(UserDAO userDAO, ContractDAO contractDAO, TaskDAO taskDAO,
-                               ContractDtoEntityMapper contractMapper, TaskService taskService,
+                               ContractDtoEntityMapper contractMapper, TaskServiceImpl taskService,
                                UserService userService) {
         this.userDAO = userDAO;
         this.contractDAO = contractDAO;
@@ -142,40 +140,42 @@ public class ContractServiceImpl implements ContractService {
                 taskDAO.save(task);
 
                 contractDtoRequest.setId(contract.getId());
+                contractDtoRequest.setContractStatus(contract.getContractStatus().name());
             }
         }
         return contractDtoRequest;
     }
 
     @Override
-    public void updateContract(UUID id, UUID userId, ContractDtoRequest contractDtoRequest) {
-        if (contractDAO.contractWithIdIsExist(id) && Objects.equals(id, contractDtoRequest.getId())) {
-            Optional<User> userOptional = userDAO.findUserById(userId);
-            Optional<Contract> contractById = contractDAO.findContractById(id);
+    public ContractDtoResponse updateContract(ContractDtoRequest contractDtoRequest) {
+        ContractDtoResponse contractDtoResponse = null;
+        if (contractDtoRequest.getUserId() != null  && contractDAO.contractWithIdIsExist(contractDtoRequest.getId())) {
+            Optional<User> userOptional = userDAO.findUserById(contractDtoRequest.getUserId());
+            Optional<Contract> contractById = contractDAO.findContractById(contractDtoRequest.getId());
             if (userOptional.isPresent() && contractById.isPresent()) {
                 User user = userOptional.get();
                 Contract contract = contractById.get();
+
                 if (allowToUpdate(user, contract)) {
                     contractMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole());
                     contractDAO.update(contract);
+                    contractDtoResponse = enrichContractInfo(contract);
                 }
             }
         }
+        return contractDtoResponse;
     }
 
     @Override
-    public ContractDtoResponse deleteContract(UUID id) {
-        ContractDtoResponse contractDtoResponse = getContractById(id);
-        if (contractDtoResponse.getId() != null) {
-            contractDAO.deleteByPK(id);
-        }
-        return contractDtoResponse;
+    public Boolean deleteContract(UUID id) {
+        return contractDAO.deleteByPK(id) != null;
     }
 
 
     public ContractDAO getContractDAO() {
         return contractDAO;
     }
+
 
     /**
      * Метод проверяет достаточно ли у заказчика денег для формирования договора оказания услуги
@@ -197,8 +197,8 @@ public class ContractServiceImpl implements ContractService {
      * @return - true - пользователи не заблокированы, false - пользователи заблокированы
      */
     private boolean usersNotBlocked(User customer, User executor) {
-        return !(UserStatus.STATUS_LOCKED.equals(customer.getUserStatus()) ||
-                UserStatus.STATUS_LOCKED.equals(executor.getUserStatus()));
+        return !(UserStatus.STATUS_BLOCKED.equals(customer.getUserStatus()) ||
+                UserStatus.STATUS_BLOCKED.equals(executor.getUserStatus()));
     }
 
     /**
@@ -231,12 +231,25 @@ public class ContractServiceImpl implements ContractService {
      * контракт оплачен, false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Contract contract) {
-        boolean userNotBlocked = !UserStatus.STATUS_LOCKED.equals(user.getUserStatus());
+        boolean userNotBlocked = !UserStatus.STATUS_BLOCKED.equals(user.getUserStatus());
         boolean userIsCustomer = user.getId().equals(contract.getCustomer().getId());
         boolean contractIsPaid = ContractStatus.CONTRACT_PAID.equals(contract.getContractStatus());
         boolean taskInTerminatedStatus = TaskStatus.TASK_DONE.equals(contract.getTask().getTaskStatus())
                 || TaskStatus.TASK_CANCELED.equals(contract.getTask().getTaskStatus());
 
         return userNotBlocked && userIsCustomer && taskInTerminatedStatus && contractIsPaid;
+    }
+
+    /**
+     * Метод обогащает ContractDtoResponse данными о заказчике, исполнителе и задании
+     *
+     * @param contract - объект задания
+     */
+    private ContractDtoResponse enrichContractInfo(Contract contract) {
+        ContractDtoResponse contractDtoResponse = contractMapper.entityToResponseDto(contract);
+        contractDtoResponse.setCustomer(taskService.getUserMapper().entityToResponseDto(contract.getCustomer()));
+        contractDtoResponse.setExecutor(taskService.getUserMapper().entityToResponseDto(contract.getExecutor()));
+        contractDtoResponse.setTask(taskService.enrichByUsersInfo(contract.getTask()));
+        return contractDtoResponse;
     }
 }

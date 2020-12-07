@@ -1,7 +1,5 @@
 package ru.iteco.project.controller.dto;
 
-import ru.iteco.project.model.Role;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -32,7 +30,10 @@ public class UserBaseDto implements DtoInterface {
     private String phoneNumber;
 
     /*** Роль пользователя */
-    private Role role;
+    private String role;
+
+    /*** Статус пользователя */
+    private String userStatus;
 
     /*** Кошелек пользователя */
     private BigDecimal wallet = new BigDecimal(0);
@@ -41,8 +42,8 @@ public class UserBaseDto implements DtoInterface {
     public UserBaseDto() {
     }
 
-    public UserBaseDto(UUID id, String firstName, String secondName, String lastName, String login, String email,
-                       String phoneNumber, Role role, BigDecimal wallet) {
+    public UserBaseDto(UUID id, String firstName, String secondName, String lastName, String login,
+                       String email, String phoneNumber, String role, String userStatus, BigDecimal wallet) {
         this.id = id;
         this.firstName = firstName;
         this.secondName = secondName;
@@ -51,8 +52,8 @@ public class UserBaseDto implements DtoInterface {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
+        this.userStatus = userStatus;
         this.wallet = wallet;
-
     }
 
     public UUID getId() {
@@ -111,11 +112,11 @@ public class UserBaseDto implements DtoInterface {
         this.phoneNumber = phoneNumber;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
@@ -127,4 +128,11 @@ public class UserBaseDto implements DtoInterface {
         this.wallet = wallet;
     }
 
+    public String getUserStatus() {
+        return userStatus;
+    }
+
+    public void setUserStatus(String userStatus) {
+        this.userStatus = userStatus;
+    }
 }

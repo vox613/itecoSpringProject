@@ -53,7 +53,7 @@ public class ContractDAOImpl extends AbstractDao<Contract, UUID> implements Cont
     @Override
     public Contract findContractByTask(Task task) {
         for (Contract contract : elements.values()) {
-            if ((contract != null) && contract.getTask().equals(task)) {
+            if ((contract != null) && contract.getTask().getId().equals(task.getId())) {
                 return contract;
             }
         }

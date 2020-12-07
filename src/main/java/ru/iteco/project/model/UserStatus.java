@@ -7,7 +7,7 @@ public enum UserStatus {
 
     NOT_EXIST("Пользователя не существует"),
     STATUS_CREATED("Создан"),
-    STATUS_LOCKED("Заблокирован"),
+    STATUS_BLOCKED("Заблокирован"),
     STATUS_ACTIVE("Активен");
 
     private final String description;
@@ -18,5 +18,21 @@ public enum UserStatus {
 
     public String getDescription() {
         return description;
+    }
+
+    /**
+     * Метод проверяет является ли входная строка текстовым представлением одного из элементов перечисления
+     *
+     * @param inputUserStatus - текстовое представление роли
+     * @return true - в перечислении присутствует аргумент с данным именем,
+     * false - в перечислении отсутствует аргумент с данным именем
+     */
+    public static boolean isCorrectValue(String inputUserStatus) {
+        for (UserStatus userStatus : values()) {
+            if (userStatus.name().equals(inputUserStatus)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

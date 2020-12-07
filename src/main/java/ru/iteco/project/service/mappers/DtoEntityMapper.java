@@ -15,11 +15,6 @@ import java.util.UUID;
 public interface DtoEntityMapper<E extends Identified<UUID>, RQ extends DtoInterface, RS extends DtoInterface> {
 
     /**
-     * Установленный формат даты и времени
-     */
-    String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
-    /**
      * Метод преобразует entity в response
      *
      * @param entity - модель данных, хранимая в БД

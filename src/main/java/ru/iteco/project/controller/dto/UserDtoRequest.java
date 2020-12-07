@@ -1,5 +1,9 @@
 package ru.iteco.project.controller.dto;
 
+import org.springframework.validation.ObjectError;
+
+import java.util.List;
+
 /**
  * Класс хранящий данные для формирования запроса создания/обновления сущности User
  */
@@ -10,6 +14,9 @@ public class UserDtoRequest extends UserBaseDto {
 
     /*** Подтверждение пароля */
     private String repeatPassword;
+
+    /*** Список ошибок валидации запроса */
+    private List<ObjectError> errors;
 
     public UserDtoRequest() {
     }
@@ -33,5 +40,13 @@ public class UserDtoRequest extends UserBaseDto {
 
     public void setRepeatPassword(String repeatPassword) {
         this.repeatPassword = repeatPassword;
+    }
+
+    public List<ObjectError> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<ObjectError> errors) {
+        this.errors = errors;
     }
 }

@@ -18,10 +18,10 @@ import java.util.Objects;
 @PropertySource(value = {"classpath:application.properties"})
 public class TaskValidator implements CustomValidator<Task> {
 
-    @Value("${task.nameMaxLength}")
+    @Value("${task.name.length.max}")
     private String maxLengthTaskName;
 
-    @Value("${task.minPrice}")
+    @Value("${task.price.min}")
     private String minPriceTask;
 
     /**
