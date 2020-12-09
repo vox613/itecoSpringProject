@@ -4,11 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.ContractStatusDtoRequest;
-import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
 
 /**
  * Класс содержит валидаторы для полей объекта запроса ContractStatusDtoRequest
@@ -33,21 +32,21 @@ public class ContractStatusDtoRequestValidator extends AbstractDtoValidator impl
 
         ContractStatusDtoRequest contractStatusDtoRequest = (ContractStatusDtoRequest) target;
 
-        if (StringUtils.isEmpty(contractStatusDtoRequest.getUserId())) {
+        if (ObjectUtils.isEmpty(contractStatusDtoRequest.getUserId())) {
             logger.error("user Id is empty");
             prepareErrorMessage(errors, "status.contract.id.empty", "userId");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(contractStatusDtoRequest.getValue())) {
+        if (ObjectUtils.isEmpty(contractStatusDtoRequest.getValue())) {
             logger.error("status value is empty");
             prepareErrorMessage(errors, "status.contract.value.empty", "value");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(contractStatusDtoRequest.getDescription())) {
+        if (ObjectUtils.isEmpty(contractStatusDtoRequest.getDescription())) {
             logger.error("status description is empty");
             prepareErrorMessage(errors, "status.contract.description.empty", "description");
         }

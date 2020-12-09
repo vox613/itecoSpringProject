@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
-import ru.iteco.project.dao.ContractDAO;
-import ru.iteco.project.dao.TaskDAO;
-import ru.iteco.project.dao.UserDAO;
+import ru.iteco.project.dao.ContractRepository;
+import ru.iteco.project.dao.TaskRepository;
+import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.exception.UnavailableRoleOperationException;
-import ru.iteco.project.model.Contract;
-import ru.iteco.project.model.Task;
-import ru.iteco.project.model.User;
+import ru.iteco.project.domain.Contract;
+import ru.iteco.project.domain.Task;
+import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.TaskDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 
@@ -25,10 +25,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.*;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.EXECUTOR;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.isEqualsUserRole;
-import static ru.iteco.project.model.UserStatus.UserStatusEnum.*;
+import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.*;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.EXECUTOR;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.domain.UserStatus.UserStatusEnum.*;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с заданиями
@@ -42,18 +42,27 @@ public class TaskServiceImpl implements TaskService {
     @Value("${errors.user.role.operation.unavailable}")
     private String unavailableOperationMessage;
 
-    private final TaskDAO taskDAO;
-    private final UserDAO userDAO;
-    private final ContractDAO contractDAO;
+    /*** Объект доступа к репозиторию заданий */
+    private final TaskRepository taskRepository;
+
+    /*** Объект доступа к репозиторию пользователей */
+    private final UserRepository userRepository;
+
+    /*** Объект доступа к репозиторию контрактов */
+    private final ContractRepository contractRepository;
+
+    /*** Объект маппера dto задания в сущность задания */
     private final TaskDtoEntityMapper taskMapper;
+
+    /*** Объект маппера dto пользователя в сущность пользователя */
     private final UserDtoEntityMapper userMapper;
 
 
-    public TaskServiceImpl(TaskDAO taskDAO, UserDAO userDAO, ContractDAO contractDAO,
+    public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, ContractRepository contractRepository,
                            TaskDtoEntityMapper taskMapper, UserDtoEntityMapper userMapper) {
-        this.taskDAO = taskDAO;
-        this.userDAO = userDAO;
-        this.contractDAO = contractDAO;
+        this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
+        this.contractRepository = contractRepository;
         this.taskMapper = taskMapper;
         this.userMapper = userMapper;
     }
@@ -66,7 +75,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public List<TaskDtoResponse> getAllTasks() {
         ArrayList<TaskDtoResponse> taskDtoResponses = new ArrayList<>();
-        for (Task task : taskDAO.getAll()) {
+        for (Task task : taskRepository.findAll()) {
             taskDtoResponses.add(enrichByUsersInfo(task));
         }
         return taskDtoResponses;
@@ -79,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public List<TaskDtoResponse> getAllUserTasks(UUID userId) {
-        return taskDAO.findAllTasksByCustomerId(userId).stream()
+        return taskRepository.findTasksByCustomerId(userId).stream()
                 .map(this::enrichByUsersInfo)
                 .collect(Collectors.toList());
     }
@@ -92,7 +101,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public TaskDtoResponse getTaskById(UUID id) {
         TaskDtoResponse taskDtoResponse = null;
-        Optional<Task> optionalTask = taskDAO.findTaskById(id);
+        Optional<Task> optionalTask = taskRepository.findById(id);
         if (optionalTask.isPresent()) {
             Task task = optionalTask.get();
             taskDtoResponse = enrichByUsersInfo(task);
@@ -109,14 +118,14 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public TaskDtoResponse createTask(TaskDtoRequest taskDtoRequest) {
         TaskDtoResponse taskDtoResponse = null;
-        Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getCustomerId());
+        Optional<User> userOptional = userRepository.findById(taskDtoRequest.getCustomerId());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             checkUserPermissions(user);
-            userDAO.updateUserStatus(user, ACTIVE);
+            userMapper.updateUserStatus(user, ACTIVE);
             Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
             task.setCustomer(user);
-            taskDAO.save(task);
+            taskRepository.save(task);
             taskDtoResponse = enrichByUsersInfo(task);
         }
         return taskDtoResponse;
@@ -132,16 +141,16 @@ public class TaskServiceImpl implements TaskService {
     public TaskDtoResponse updateTask(TaskDtoRequest taskDtoRequest) {
         TaskDtoResponse taskDtoResponse = null;
         if (taskDtoRequest.getUserId() != null
-                && taskDAO.taskWithIdIsExist(taskDtoRequest.getUserId())) {
+                && taskRepository.existsById(taskDtoRequest.getUserId())) {
 
-            Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getUserId());
-            Optional<Task> taskById = taskDAO.findTaskById(taskDtoRequest.getUserId());
+            Optional<User> userOptional = userRepository.findById(taskDtoRequest.getUserId());
+            Optional<Task> taskById = taskRepository.findById(taskDtoRequest.getUserId());
             if (userOptional.isPresent() && taskById.isPresent()) {
                 User user = userOptional.get();
                 Task task = taskById.get();
                 if (allowToUpdate(user, task)) {
                     taskMapper.requestDtoToEntity(taskDtoRequest, task, user.getRole().getValue());
-                    taskDAO.update(task);
+                    taskRepository.save(task);
                     taskDtoResponse = enrichByUsersInfo(task);
                 }
             }
@@ -158,11 +167,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteTask(UUID id) {
-        Optional<Task> optionalTask = taskDAO.findTaskById(id);
+        Optional<Task> optionalTask = taskRepository.findById(id);
         if (optionalTask.isPresent()) {
-            Optional<Contract> optionalContract = contractDAO.findContractByTask(optionalTask.get());
-            optionalContract.ifPresent(contractDAO::delete);
-            taskDAO.deleteByPK(id);
+            Optional<Contract> optionalContract = contractRepository.findContractByTask(optionalTask.get());
+            optionalContract.ifPresent(contractRepository::delete);
+            taskRepository.deleteById(id);
             return true;
         }
         return false;
@@ -183,15 +192,6 @@ public class TaskServiceImpl implements TaskService {
             taskDtoResponse.setExecutor(userMapper.entityToResponseDto(task.getExecutor()));
         }
         return taskDtoResponse;
-    }
-
-
-    public TaskDAO getTaskDAO() {
-        return taskDAO;
-    }
-
-    public UserDAO getUserDAO() {
-        return userDAO;
     }
 
     public TaskDtoEntityMapper getTaskMapper() {

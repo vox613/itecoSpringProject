@@ -1,20 +1,41 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.UUID;
 
 /**
  * Модель данных пердставляющая статусы задания
  */
+@Entity
+@Table(name = "task_statuses")
 public class TaskStatus implements Identified<UUID> {
 
     /*** Уникальный id статуса задания */
+    @Id
+    @Column
     private UUID id;
 
     /*** Наименование статуса задания */
+    @Column(nullable = false, unique = true)
     private String value;
 
     /*** Описание статуса задания */
+    @Column(nullable = false)
     private String description;
+
+
+    public TaskStatus() {
+    }
+
+    public TaskStatus(UUID id, String value, String description) {
+        this.id = id;
+        this.value = value;
+        this.description = description;
+    }
+
 
     @Override
     public UUID getId() {

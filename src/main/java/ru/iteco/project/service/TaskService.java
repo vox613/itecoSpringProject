@@ -2,7 +2,7 @@ package ru.iteco.project.service;
 
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
-import ru.iteco.project.model.Task;
+import ru.iteco.project.domain.Task;
 
 import java.util.List;
 import java.util.UUID;
