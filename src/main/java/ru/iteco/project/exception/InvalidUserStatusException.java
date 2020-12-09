@@ -1,5 +1,9 @@
 package ru.iteco.project.exception;
 
+/**
+ * Класс исключения InvalidUserStatusException, возникающего при попытке создать пользователя с невалидным
+ * статусом
+ */
 public class InvalidUserStatusException extends RuntimeException {
 
 

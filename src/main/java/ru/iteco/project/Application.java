@@ -13,7 +13,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-
+/**
+ * Точка запуска String приложения
+ */
 @SpringBootApplication
 @Configuration
 @EnableTransactionManagement

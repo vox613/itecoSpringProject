@@ -2,10 +2,8 @@ package ru.iteco.project.service;
 
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
-import ru.iteco.project.model.Contract;
-import ru.iteco.project.model.ContractStatus;
+import ru.iteco.project.domain.Contract;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 

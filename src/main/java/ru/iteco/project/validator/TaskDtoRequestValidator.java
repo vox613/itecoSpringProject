@@ -6,11 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
-import ru.iteco.project.model.TaskStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -56,21 +55,21 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
 
         TaskDtoRequest taskForm = (TaskDtoRequest) target;
 
-        if (StringUtils.isEmpty(taskForm.getCustomerId())) {
+        if (ObjectUtils.isEmpty(taskForm.getCustomerId())) {
             logger.error("customerId is empty");
             prepareErrorMessage(errors, "task.customer.id.empty", "name");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskForm.getName())) {
+        if (ObjectUtils.isEmpty(taskForm.getName())) {
             logger.error("taskName is empty");
             prepareErrorMessage(errors, "task.name.empty", "name");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskForm.getDescription())) {
+        if (ObjectUtils.isEmpty(taskForm.getDescription())) {
             logger.error("description is empty");
             prepareErrorMessage(errors, "task.description.empty", "description");
         } else if (taskDescriptionMaxLength < taskForm.getDescription().length()) {
@@ -80,7 +79,7 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskForm.getTaskCompletionDate())) {
+        if (ObjectUtils.isEmpty(taskForm.getTaskCompletionDate())) {
             logger.error("taskCompletionDate is empty");
             prepareErrorMessage(errors, "task.date.completion.empty", "taskCompletionDate");
         } else if (!dateTimeFormatIsValid(taskForm)) {
@@ -89,7 +88,7 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskForm.getPrice())) {
+        if (ObjectUtils.isEmpty(taskForm.getPrice())) {
             logger.error("task price is empty");
             prepareErrorMessage(errors, "task.price.empty", "price");
         } else if (!priceIsValid(taskForm)) {
@@ -100,14 +99,14 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
 
 
         String taskDecision = taskForm.getTaskDecision();
-        if (!StringUtils.isEmpty(taskDecision) && taskDecision.length() > taskDecisionMaxLength) {
+        if (!ObjectUtils.isEmpty(taskDecision) && taskDecision.length() > taskDecisionMaxLength) {
             logger.error("The length of the task solution exceeds the maximum number of characters");
             prepareErrorMessage(errors, "task.decision.length.max", "taskDecision");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskForm.getTaskStatus())) {
+        if (ObjectUtils.isEmpty(taskForm.getTaskStatus())) {
             logger.error("task status is empty");
             prepareErrorMessage(errors, "task.status.empty", "taskStatus");
         }
@@ -116,6 +115,7 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
 
     /**
      * Метод проверяет введенную дату и время на соответствие общему формату
+     *
      * @param taskForm - объект запроса
      * @return true - дата и время валидны, false - не валидны
      */
@@ -126,13 +126,14 @@ public class TaskDtoRequestValidator extends AbstractDtoValidator implements Val
             return true;
         } catch (Exception e) {
             logger.error(String.format("An error occurred while parsing the date! Input value: %s , Expected format: %s",
-                            taskForm.getTaskCompletionDate(), formatDateTime));
+                    taskForm.getTaskCompletionDate(), formatDateTime));
             return false;
         }
     }
 
     /**
      * Метод проверяет удовлетворяет ли введенная сумма установленным ограничениям
+     *
      * @param taskForm - объект запроса
      * @return true - сумма валидна, false - не валидна
      */

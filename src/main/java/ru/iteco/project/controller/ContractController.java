@@ -42,7 +42,7 @@ public class ContractController {
      * @return - список ContractDtoResponse
      */
     @GetMapping
-    ResponseEntity<List<ContractDtoResponse>> getAllContracts(@RequestParam(required = false) UUID userId) {
+    ResponseEntity<List<ContractDtoResponse>> getAllContracts() {
         List<ContractDtoResponse> allContracts = contractService.getAllContracts();
         return ResponseEntity.ok().body(allContracts);
     }

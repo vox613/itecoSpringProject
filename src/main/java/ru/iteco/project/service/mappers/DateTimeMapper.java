@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 @Service
 @PropertySource(value = {"classpath:application.yml"})
@@ -15,9 +13,6 @@ public class DateTimeMapper {
 
     /*** Установленный формат даты и времени*/
     private static String formatDateTime;
-
-    /*** Объект календаря с установленной таймзоной UTC для преобразовани даты/времени из БД */
-    public static final Calendar tzUTC = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
     @Value("${format.date.time}")
     public void setFormatDateTime(String formatDateTime) {
@@ -50,11 +45,6 @@ public class DateTimeMapper {
             return LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern(formatDateTime));
         }
         return null;
-    }
-
-
-    public String getFormatDateTime() {
-        return formatDateTime;
     }
 
 }

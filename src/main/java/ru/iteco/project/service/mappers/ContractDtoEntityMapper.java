@@ -5,16 +5,20 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
-import ru.iteco.project.dao.ContractStatusDAO;
+import ru.iteco.project.dao.ContractStatusRepository;
+import ru.iteco.project.dao.TaskStatusRepository;
 import ru.iteco.project.exception.InvalidContractStatusException;
-import ru.iteco.project.model.Contract;
+import ru.iteco.project.exception.InvalidTaskStatusException;
+import ru.iteco.project.domain.Contract;
+import ru.iteco.project.domain.Task;
+import ru.iteco.project.domain.TaskStatus;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
 
-
-import static ru.iteco.project.model.ContractStatus.ContractStatusEnum.PAID;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.CUSTOMER;
+import static ru.iteco.project.domain.ContractStatus.ContractStatusEnum.PAID;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.CUSTOMER;
 
 /**
  * Класс маппер для сущности Contract
@@ -30,12 +34,19 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
     @Value("${errors.contract.status.invalid}")
     private String invalidContractStatusMessage;
 
+    @Value("${errors.task.status.invalid}")
+    private String taskStatusIsInvalidMessage;
 
-    private final ContractStatusDAO contractStatusDAO;
+    /*** Объект доступа к репозиторию статусов контрактов */
+    private final ContractStatusRepository contractStatusRepository;
+
+    /*** Объект доступа к репозиторию статусов заданий */
+    private final TaskStatusRepository taskStatusRepository;
 
 
-    public ContractDtoEntityMapper(ContractStatusDAO contractStatusDAO) {
-        this.contractStatusDAO = contractStatusDAO;
+    public ContractDtoEntityMapper(ContractStatusRepository contractStatusRepository, TaskStatusRepository taskStatusRepository) {
+        this.contractStatusRepository = contractStatusRepository;
+        this.taskStatusRepository = taskStatusRepository;
     }
 
     @Override
@@ -56,7 +67,7 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
         Contract contract = new Contract();
         if (requestDto != null) {
             contract.setId(UUID.randomUUID());
-            contract.setContractStatus(contractStatusDAO.findContractStatusByValue(PAID.name())
+            contract.setContractStatus(contractStatusRepository.findContractStatusByValue(PAID.name())
                     .orElseThrow(() -> new InvalidContractStatusException(invalidContractStatusMessage)));
         }
         return contract;
@@ -72,10 +83,23 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
     public void requestDtoToEntity(ContractDtoRequest requestDto, Contract contract, String role) {
         if (requestDto != null) {
             if (CUSTOMER.name().equals(role)) {
-                contract.setContractStatus(contractStatusDAO.findContractStatusByValue(requestDto.getContractStatus())
+                contract.setContractStatus(contractStatusRepository.findContractStatusByValue(requestDto.getContractStatus())
                         .orElseThrow(() -> new InvalidContractStatusException(invalidContractStatusMessage)));
             }
         }
+    }
+
+    /**
+     * Метод устанавливает переданному заданию статус соответствующий переданному объекту taskStatusEnum
+     *
+     * @param task           - сущность задания
+     * @param taskStatusEnum - объект перечисления статусов заданий
+     */
+    public void updateTaskStatus(Task task, TaskStatus.TaskStatusEnum taskStatusEnum) {
+        Optional<TaskStatus> taskStatusByValue = taskStatusRepository.findTaskStatusByValue(taskStatusEnum.name());
+        TaskStatus taskStatus = taskStatusByValue
+                .orElseThrow(() -> new InvalidTaskStatusException(taskStatusIsInvalidMessage));
+        task.setTaskStatus(taskStatus);
     }
 
 }

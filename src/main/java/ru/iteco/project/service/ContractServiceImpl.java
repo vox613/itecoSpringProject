@@ -4,14 +4,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
-import ru.iteco.project.dao.ContractDAO;
-import ru.iteco.project.dao.TaskDAO;
-import ru.iteco.project.dao.UserDAO;
-import ru.iteco.project.model.*;
+import ru.iteco.project.dao.ContractRepository;
+import ru.iteco.project.dao.TaskRepository;
+import ru.iteco.project.dao.UserRepository;
+import ru.iteco.project.domain.Contract;
+import ru.iteco.project.domain.ContractStatus;
+import ru.iteco.project.domain.Task;
+import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.ContractDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 
@@ -19,14 +21,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
-import static ru.iteco.project.model.ContractStatus.ContractStatusEnum.*;
-import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.*;
-import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.DONE;
-import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.REGISTERED;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.EXECUTOR;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.isEqualsUserRole;
-import static ru.iteco.project.model.UserStatus.UserStatusEnum.*;
+import static ru.iteco.project.domain.ContractStatus.ContractStatusEnum.*;
+import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.DONE;
+import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.*;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.EXECUTOR;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.domain.UserStatus.UserStatusEnum.*;
 
 
 /**
@@ -36,46 +36,57 @@ import static ru.iteco.project.model.UserStatus.UserStatusEnum.*;
 public class ContractServiceImpl implements ContractService {
     private static final Logger log = LogManager.getLogger(ContractServiceImpl.class.getName());
 
-    private final ContractDAO contractDAO;
-    private final UserDAO userDAO;
-    private final TaskDAO taskDAO;
-    private final ContractDtoEntityMapper contractMapper;
+
+    /*** Объект доступа к репозиторию контрактов */
+    private final ContractRepository contractRepository;
+
+    /*** Объект доступа к репозиторию пользователей */
+    private final UserRepository userRepository;
+
+    /*** Объект доступа к репозиторию заданий */
+    private final TaskRepository taskRepository;
+
+    /*** Объект маппера dto контракта в сущность контракта */
+    private final ContractDtoEntityMapper contractDtoEntityMapper;
+
+    /*** Объект маппера dto пользователя в сущность пользователя */
     private final UserDtoEntityMapper userDtoEntityMapper;
+
+    /*** Объект сервисного слоя заданий */
     private final TaskService taskService;
 
 
-    public ContractServiceImpl(ContractDAO contractDAO, UserDAO userDAO, TaskDAO taskDAO, ContractDtoEntityMapper contractMapper,
-                               UserDtoEntityMapper userDtoEntityMapper,  TaskService taskService) {
-        this.contractDAO = contractDAO;
-        this.userDAO = userDAO;
-        this.taskDAO = taskDAO;
-        this.contractMapper = contractMapper;
+    public ContractServiceImpl(ContractRepository contractRepository, UserRepository userRepository, TaskRepository taskRepository,
+                               ContractDtoEntityMapper contractMapper, UserDtoEntityMapper userDtoEntityMapper, TaskService taskService) {
+        this.contractRepository = contractRepository;
+        this.userRepository = userRepository;
+        this.taskRepository = taskRepository;
+        this.contractDtoEntityMapper = contractMapper;
         this.userDtoEntityMapper = userDtoEntityMapper;
         this.taskService = taskService;
     }
 
-
     /**
-     *  По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
      */
     @Override
     @Transactional(readOnly = true)
     public List<ContractDtoResponse> getAllContracts() {
         ArrayList<ContractDtoResponse> contractDtoResponses = new ArrayList<>();
-        for (Contract contract : contractDAO.getAll()) {
+        for (Contract contract : contractRepository.findAll()) {
             contractDtoResponses.add(enrichContractInfo(contract));
         }
         return contractDtoResponses;
     }
 
     /**
-     *  По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
      */
     @Override
     @Transactional(readOnly = true)
     public ContractDtoResponse getContractById(UUID id) {
         ContractDtoResponse contractDtoResponse = null;
-        Optional<Contract> optionalContract = contractDAO.findContractById(id);
+        Optional<Contract> optionalContract = contractRepository.findById(id);
         if (optionalContract.isPresent()) {
             Contract contract = optionalContract.get();
             contractDtoResponse = enrichContractInfo(contract);
@@ -92,8 +103,8 @@ public class ContractServiceImpl implements ContractService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ContractDtoResponse createContract(ContractDtoRequest contractDtoRequest) {
         ContractDtoResponse contractDtoResponse = null;
-        Optional<Task> taskById = taskDAO.findTaskById(contractDtoRequest.getTaskId());
-        Optional<User> executorById = userDAO.findUserById(contractDtoRequest.getExecutorId());
+        Optional<Task> taskById = taskRepository.findById(contractDtoRequest.getTaskId());
+        Optional<User> executorById = userRepository.findById(contractDtoRequest.getExecutorId());
         if (taskById.isPresent() && executorById.isPresent()) {
             Task task = taskById.get();
             User customer = task.getCustomer();
@@ -106,18 +117,18 @@ public class ContractServiceImpl implements ContractService {
                     && customerHaveEnoughMoney(task)) {
 
                 customer.setWallet(customer.getWallet().subtract(task.getPrice()));
-                userDAO.update(customer);
-                userDAO.updateUserStatus(executor, ACTIVE);
+                userRepository.save(customer);
+                userDtoEntityMapper.updateUserStatus(executor, ACTIVE);
 
                 task.setLastTaskUpdateDate(LocalDateTime.now());
                 task.setExecutor(executor);
-                taskDAO.updateTaskStatus(task, IN_PROGRESS);
+                contractDtoEntityMapper.updateTaskStatus(task, IN_PROGRESS);
 
-                Contract contract = contractMapper.requestDtoToEntity(contractDtoRequest);
+                Contract contract = contractDtoEntityMapper.requestDtoToEntity(contractDtoRequest);
                 contract.setExecutor(executor);
                 contract.setTask(task);
                 contract.setCustomer(task.getCustomer());
-                contractDAO.save(contract);
+                contractRepository.save(contract);
 
                 contractDtoResponse = enrichContractInfo(contract);
             }
@@ -135,20 +146,18 @@ public class ContractServiceImpl implements ContractService {
         ContractDtoResponse contractDtoResponse = null;
         if (Objects.equals(id, contractDtoRequest.getId())
                 && contractDtoRequest.getUserId() != null
-                && contractDAO.contractWithIdIsExist(id)) {
+                && contractRepository.existsById(id)) {
 
-            Optional<User> userOptional = userDAO.findUserById(contractDtoRequest.getUserId());
-            Optional<Contract> contractById = contractDAO.findContractById(id);
+            Optional<User> userOptional = userRepository.findById(contractDtoRequest.getUserId());
+            Optional<Contract> contractById = contractRepository.findById(id);
             if (userOptional.isPresent() && contractById.isPresent()) {
                 User user = userOptional.get();
                 Contract contract = contractById.get();
 
                 if (allowToUpdate(user, contract)) {
-                    contractMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole().getValue());
+                    contractDtoEntityMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole().getValue());
                     transferFunds(contract);
-                    userDAO.update(contract.getCustomer());
-                    userDAO.update(contract.getExecutor());
-                    contractDAO.update(contract);
+                    contractRepository.save(contract);
                     contractDtoResponse = enrichContractInfo(contract);
                 }
             }
@@ -158,29 +167,25 @@ public class ContractServiceImpl implements ContractService {
 
 
     /**
-     *  SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
-     *  REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
-     *  должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
+     * SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
+     * REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
+     * должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteContract(UUID id) {
-        return contractDAO.deleteByPK(id) != null;
+        contractRepository.deleteById(id);
+        return true;
     }
 
 
     @Override
     public ContractDtoResponse enrichContractInfo(Contract contract) {
-        ContractDtoResponse contractDtoResponse = contractMapper.entityToResponseDto(contract);
+        ContractDtoResponse contractDtoResponse = contractDtoEntityMapper.entityToResponseDto(contract);
         contractDtoResponse.setCustomer(userDtoEntityMapper.entityToResponseDto(contract.getCustomer()));
         contractDtoResponse.setExecutor(userDtoEntityMapper.entityToResponseDto(contract.getExecutor()));
         contractDtoResponse.setTask(taskService.enrichByUsersInfo(contract.getTask()));
         return contractDtoResponse;
-    }
-
-
-    public ContractDAO getContractDAO() {
-        return contractDAO;
     }
 
     /**
@@ -247,7 +252,7 @@ public class ContractServiceImpl implements ContractService {
         boolean userIsCustomer = user.getId().equals(contract.getCustomer().getId());
         boolean contractIsPaid = isEqualsContractStatus(PAID, contract);
         boolean taskInTerminatedStatus = isEqualsTaskStatus(DONE, contract.getTask())
-                || isEqualsTaskStatus(CANCELED, contract.getTask()) ;
+                || isEqualsTaskStatus(CANCELED, contract.getTask());
 
         return userNotBlocked && userIsCustomer && contractIsPaid && taskInTerminatedStatus;
     }

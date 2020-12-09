@@ -1,20 +1,40 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.UUID;
 
 /**
  * Модель данных представляющая статусы пользователей
  */
+@Entity
+@Table(name = "user_statuses")
 public class UserStatus implements Identified<UUID> {
 
     /*** Уникальный id роли пользователя */
+    @Id
+    @Column
     private UUID id;
 
     /*** Наименование роли пользователя */
+    @Column(nullable = false, unique = true)
     private String value;
 
     /*** Описание роли пользователя */
+    @Column(nullable = false)
     private String description;
+
+
+    public UserStatus() {
+    }
+
+    public UserStatus(UUID id, String value, String description) {
+        this.id = id;
+        this.value = value;
+        this.description = description;
+    }
 
     @Override
     public UUID getId() {

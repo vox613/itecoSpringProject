@@ -1,5 +1,6 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -7,44 +8,78 @@ import java.util.UUID;
 /**
  * Модель данных представляющая задание для исполнения
  */
+@Entity
+@Table(name = "task")
 public class Task implements Identified<UUID> {
 
     private static final long serialVersionUID = -7931737332645464539L;
 
     /*** Уникальный id задания */
+    @Id
+    @Column
     private UUID id;
 
     /*** Уникальный id заказчика */
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
 
     /*** Уникальный id исполнителя */
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinColumn(name = "executor_id")
     private User executor;
 
     /*** Имя задания */
+    @Column(name = "title", nullable = false)
     private String title;
 
     /*** Описание задания */
+    @Column(name = "description", nullable = false)
     private String description;
 
     /*** Время и дата размещения задания */
+    @Column(name = "task_creation_date", nullable = false)
     private LocalDateTime taskCreationDate = LocalDateTime.now();
 
     /*** Дата и время до наступления которой необходимо выполнить задание */
+    @Column(name = "task_completion_date", nullable = false)
     private LocalDateTime taskCompletionDate;
 
     /*** Время и дата последнего обновления задания */
+    @Column(name = "last_task_update_date", nullable = false)
     private LocalDateTime lastTaskUpdateDate;
 
     /*** Стоимость исполнения задания */
+    @Column(name = "price", nullable = false, precision = 1000, scale = 2)
     private BigDecimal price;
 
     /*** Статус задания */
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "task_status_id", nullable = false)
     private TaskStatus taskStatus;
 
     /*** Решение задания */
+    @Column(name = "task_decision")
     private String taskDecision;
 
+
     public Task() {
+    }
+
+    public Task(UUID id, User customer, User executor, String title, String description, LocalDateTime taskCreationDate,
+                LocalDateTime taskCompletionDate, LocalDateTime lastTaskUpdateDate, BigDecimal price, TaskStatus taskStatus,
+                String taskDecision) {
+        this.id = id;
+        this.customer = customer;
+        this.executor = executor;
+        this.title = title;
+        this.description = description;
+        this.taskCreationDate = taskCreationDate;
+        this.taskCompletionDate = taskCompletionDate;
+        this.lastTaskUpdateDate = lastTaskUpdateDate;
+        this.price = price;
+        this.taskStatus = taskStatus;
+        this.taskDecision = taskDecision;
     }
 
     public void setId(UUID id) {

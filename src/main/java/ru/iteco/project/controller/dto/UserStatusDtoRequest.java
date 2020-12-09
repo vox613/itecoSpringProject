@@ -1,7 +1,5 @@
 package ru.iteco.project.controller.dto;
 
-import ru.iteco.project.controller.dto.UserStatusBaseDto;
-
 import java.util.UUID;
 
 /**

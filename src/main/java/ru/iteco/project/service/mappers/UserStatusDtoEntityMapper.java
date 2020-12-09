@@ -1,12 +1,9 @@
 package ru.iteco.project.service.mappers;
 
 import org.springframework.stereotype.Service;
-import ru.iteco.project.controller.dto.UserRoleDtoRequest;
-import ru.iteco.project.controller.dto.UserRoleDtoResponse;
 import ru.iteco.project.controller.dto.UserStatusDtoRequest;
 import ru.iteco.project.controller.dto.UserStatusDtoResponse;
-import ru.iteco.project.model.UserRole;
-import ru.iteco.project.model.UserStatus;
+import ru.iteco.project.domain.UserStatus;
 
 import java.util.UUID;
 

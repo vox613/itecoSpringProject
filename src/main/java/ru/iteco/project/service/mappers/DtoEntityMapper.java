@@ -1,7 +1,7 @@
 package ru.iteco.project.service.mappers;
 
 import ru.iteco.project.controller.dto.DtoInterface;
-import ru.iteco.project.model.Identified;
+import ru.iteco.project.domain.Identified;
 
 import java.util.UUID;
 

@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.UserStatusDtoRequest;
@@ -32,21 +32,21 @@ public class UserStatusDtoRequestValidator extends AbstractDtoValidator implemen
 
         UserStatusDtoRequest userStatusForm = (UserStatusDtoRequest) target;
 
-        if (StringUtils.isEmpty(userStatusForm.getUserId())) {
+        if (ObjectUtils.isEmpty(userStatusForm.getUserId())) {
             logger.error("user Id is empty");
             prepareErrorMessage(errors, "status.user.id.empty", "userId");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userStatusForm.getValue())) {
+        if (ObjectUtils.isEmpty(userStatusForm.getValue())) {
             logger.error("status value is empty");
             prepareErrorMessage(errors, "status.user.value.empty", "value");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userStatusForm.getDescription())) {
+        if (ObjectUtils.isEmpty(userStatusForm.getDescription())) {
             logger.error("status description is empty");
             prepareErrorMessage(errors, "status.user.description.empty", "description");
         }

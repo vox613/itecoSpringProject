@@ -6,11 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.UserDtoRequest;
-import ru.iteco.project.model.UserStatus;
 
 /**
  * Класс содержит валидаторы для полей объекта запроса UserDtoRequest
@@ -38,28 +37,28 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
 
         UserDtoRequest userForm = (UserDtoRequest) target;
 
-        if (StringUtils.isEmpty(userForm.getFirstName())) {
+        if (ObjectUtils.isEmpty(userForm.getFirstName())) {
             logger.error("firstName is empty");
             prepareErrorMessage(errors, "user.firstName.empty", "firstName");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userForm.getSecondName())) {
+        if (ObjectUtils.isEmpty(userForm.getSecondName())) {
             logger.error("secondName is empty");
             prepareErrorMessage(errors, "user.secondName.empty", "secondName");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userForm.getLogin())) {
+        if (ObjectUtils.isEmpty(userForm.getLogin())) {
             logger.error("login is empty");
             prepareErrorMessage(errors, "user.login.empty", "login");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userForm.getEmail())) {
+        if (ObjectUtils.isEmpty(userForm.getEmail())) {
             logger.error("email is empty");
             prepareErrorMessage(errors, "user.email.empty", "email");
         } else if (!userForm.getEmail().matches(emailRegExpValidator)) {
@@ -69,7 +68,7 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userForm.getRole())) {
+        if (ObjectUtils.isEmpty(userForm.getRole())) {
             logger.error("role is empty");
             prepareErrorMessage(errors, "user.role.empty", "role");
         }
@@ -86,7 +85,7 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userForm.getPassword()) || StringUtils.isEmpty(userForm.getRepeatPassword())) {
+        if (ObjectUtils.isEmpty(userForm.getPassword()) || ObjectUtils.isEmpty(userForm.getRepeatPassword())) {
             logger.error("passwords is empty");
             prepareErrorMessage(errors, "user.password.empty", "repeatPassword");
         } else if (!userForm.getPassword().equals(userForm.getRepeatPassword())) {
@@ -95,7 +94,7 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         }
 
 
-        if (StringUtils.isEmpty(userForm.getUserStatus())) {
+        if (ObjectUtils.isEmpty(userForm.getUserStatus())) {
             logger.error("user status empty");
             prepareErrorMessage(errors, "user.status.empty", "userStatus");
         }

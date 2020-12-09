@@ -4,12 +4,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.exception.ContractConclusionException;
-import ru.iteco.project.model.ContractStatus;
 
 /**
  * Класс содержит валидаторы для полей объекта запроса ContractDtoRequest
@@ -34,13 +33,13 @@ public class ContractDtoRequestValidator extends AbstractDtoValidator implements
         ContractDtoRequest contractForm = (ContractDtoRequest) target;
 
 
-        if (StringUtils.isEmpty(contractForm.getExecutorId())) {
+        if (ObjectUtils.isEmpty(contractForm.getExecutorId())) {
             logger.error("contract executorId is empty");
             prepareErrorMessage(errors, "contract.executor.id.empty", "executorId");
         }
 
 
-        if (StringUtils.isEmpty(contractForm.getTaskId())) {
+        if (ObjectUtils.isEmpty(contractForm.getTaskId())) {
             logger.error("contract taskId is empty");
             prepareErrorMessage(errors, "contract.task.id.empty", "taskId");
         }
@@ -48,7 +47,7 @@ public class ContractDtoRequestValidator extends AbstractDtoValidator implements
 
         String confirmationCode = contractForm.getConfirmationCode();
         String repeatConfirmationCode = contractForm.getRepeatConfirmationCode();
-        if (StringUtils.isEmpty(confirmationCode) || StringUtils.isEmpty(repeatConfirmationCode)) {
+        if (ObjectUtils.isEmpty(confirmationCode) || ObjectUtils.isEmpty(repeatConfirmationCode)) {
             logger.error("contract confirmation code is empty");
             prepareErrorMessage(errors, "contract.confirmation.code.empty", "repeatConfirmationCode");
         } else if (!confirmationCode.equals(repeatConfirmationCode)) {
@@ -57,7 +56,7 @@ public class ContractDtoRequestValidator extends AbstractDtoValidator implements
         }
 
 
-        if (StringUtils.isEmpty(contractForm.getContractStatus())) {
+        if (ObjectUtils.isEmpty(contractForm.getContractStatus())) {
             logger.error("contract status is empty");
             prepareErrorMessage(errors, "contract.status.empty", "contractStatus");
         }

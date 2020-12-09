@@ -1,5 +1,9 @@
 package ru.iteco.project.exception;
 
+/**
+ * Класс исключения InvalidUserRoleException, возникающего при попытке создать или получить из БД
+ * пользователя с невалидной ролью
+ */
 public class InvalidUserRoleException extends RuntimeException {
 
 

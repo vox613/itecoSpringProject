@@ -1,5 +1,9 @@
 package ru.iteco.project.exception;
 
+/**
+ * Класс исключения InvalidContractStatusException, возникающего при попытке обновления контракта
+ * с использованием невалидного/удаленного статуса контракта
+ */
 public class InvalidContractStatusException extends RuntimeException {
 
 

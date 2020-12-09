@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.UserRoleDtoRequest;
@@ -32,14 +32,14 @@ public class UserRoleDtoRequestValidator extends AbstractDtoValidator implements
 
         UserRoleDtoRequest userRoleForm = (UserRoleDtoRequest) target;
 
-        if (StringUtils.isEmpty(userRoleForm.getUserId())) {
+        if (ObjectUtils.isEmpty(userRoleForm.getUserId())) {
             logger.error("user Id is empty");
             prepareErrorMessage(errors, "roles.user.id.empty", "userId");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(userRoleForm.getValue())) {
+        if (ObjectUtils.isEmpty(userRoleForm.getValue())) {
             logger.error("role value is empty");
             prepareErrorMessage(errors, "roles.value.empty", "value");
         }
