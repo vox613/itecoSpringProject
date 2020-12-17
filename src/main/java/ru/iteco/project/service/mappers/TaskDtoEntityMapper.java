@@ -83,7 +83,7 @@ public class TaskDtoEntityMapper implements DtoEntityMapper<Task, TaskDtoRequest
      */
     public void requestDtoToEntity(TaskDtoRequest requestDto, Task task, Role role) {
         if (requestDto != null) {
-            if (Role.ROLE_CUSTOMER.equals(role)) {
+            if (Role.CUSTOMER.equals(role)) {
                 task.setName(requestDto.getName());
                 task.setDescription(requestDto.getDescription());
                 task.setTaskCompletionDate(LocalDateTime.parse(requestDto.getTaskCompletionDate(), DateTimeFormatter.ofPattern(formatDateTime)));
@@ -91,7 +91,7 @@ public class TaskDtoEntityMapper implements DtoEntityMapper<Task, TaskDtoRequest
                 if (requestDto.getTaskStatus() != null) {
                     task.setTaskStatus(TaskStatus.valueOf(requestDto.getTaskStatus()));
                 }
-            } else if (Role.ROLE_EXECUTOR.equals(role)) {
+            } else if (Role.EXECUTOR.equals(role)) {
                 task.setTaskDecision(requestDto.getTaskDecision());
                 task.setTaskStatus(TaskStatus.TASK_ON_CHECK);
             }

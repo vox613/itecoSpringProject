@@ -1,0 +1,56 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="1" author="Aleksey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="contract"/>
+            </not>
+        </preConditions>
+        <createTable tableName="contract"
+                     remarks="Таблица созданных контрактов">
+            <column name="id" type="uuid"
+                    remarks="Идентификатор записи">
+                <constraints primaryKey="true"
+                             primaryKeyName="contract_pk"
+                             nullable="false"/>
+            </column>
+
+            <column name="customer_id" type="uuid" remarks="Идентификатор заказчика">
+                <constraints foreignKeyName="customer_id_fk"
+                             referencedTableName="user"
+                             referencedColumnNames="id"
+                             nullable="false"/>
+            </column>
+            <column name="executor_id" type="uuid" remarks="Идентификатор исполнителя">
+                <constraints foreignKeyName="executor_id_fk"
+                             referencedTableName="user"
+                             referencedColumnNames="id"
+                             nullable="false"/>
+            </column>
+
+            <column name="time_contract_conclusion" type="timestamp with time zone" remarks="Дата заключения контракта">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="task_id" type="uuid" remarks="Идентификатор задания">
+                <constraints foreignKeyName="task_id_fk"
+                             referencedTableName="task"
+                             referencedColumnNames="id"
+                             nullable="false"/>
+            </column>
+
+            <column name="contract_status_id" type="uuid" remarks="Статус контракта">
+                <constraints foreignKeyName="contract_status_fk"
+                             referencedTableName="contract_statuses"
+                             referencedColumnNames="id"
+                             nullable="false"/>
+            </column>
+        </createTable>
+        <comment>Задача по созданию контракта</comment>
+    </changeSet>
+
+</databaseChangeLog>

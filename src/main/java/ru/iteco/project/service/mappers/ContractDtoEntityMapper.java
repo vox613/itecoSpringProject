@@ -65,7 +65,7 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
                 contract.setCustomer(task.getCustomer());
                 contract.setTask(task);
             }
-            contract.setContractStatus(ContractStatus.CONTRACT_REGISTERED);
+            contract.setContractStatus(ContractStatus.REGISTERED);
         }
         return contract;
     }
@@ -79,7 +79,7 @@ public class ContractDtoEntityMapper implements DtoEntityMapper<Contract, Contra
      */
     public void requestDtoToEntity(ContractDtoRequest requestDto, Contract contract, Role role) {
         if (requestDto != null) {
-            if (Role.ROLE_CUSTOMER.equals(role)) {
+            if (Role.CUSTOMER.equals(role)) {
                 contract.setContractStatus(ContractStatus.valueOf(requestDto.getContractStatus()));
             }
         }

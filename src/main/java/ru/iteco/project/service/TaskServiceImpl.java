@@ -144,7 +144,7 @@ public class TaskServiceImpl implements TaskService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             checkUserPermissions(user);
-            user.setUserStatus(UserStatus.STATUS_ACTIVE);
+            user.setUserStatus(UserStatus.ACTIVE);
             userDAO.save(user);
             Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
             taskDAO.save(task);
@@ -219,7 +219,7 @@ public class TaskServiceImpl implements TaskService {
      * false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Task task) {
-        boolean userNotBlocked = !UserStatus.STATUS_BLOCKED.equals(user.getUserStatus());
+        boolean userNotBlocked = !UserStatus.BLOCKED.equals(user.getUserStatus());
         boolean userIsCustomerAndTaskRegistered = user.getId().equals(task.getCustomer().getId()) &&
                 (TaskStatus.TASK_REGISTERED.equals(task.getTaskStatus()) || TaskStatus.TASK_ON_CHECK.equals(task.getTaskStatus()));
         boolean userIsExecutorAndTaskInProgress = (task.getExecutor() != null) &&
@@ -235,7 +235,7 @@ public class TaskServiceImpl implements TaskService {
      * @param user - сущность пользователя
      */
     private void checkUserPermissions(User user) {
-        if (Role.ROLE_EXECUTOR.equals(user.getRole()) || UserStatus.STATUS_BLOCKED.equals(user.getUserStatus())) {
+        if (Role.EXECUTOR.equals(user.getRole()) || UserStatus.BLOCKED.equals(user.getUserStatus())) {
             throw new UnavailableRoleOperationException(unavailableOperationMessage);
         }
     }
