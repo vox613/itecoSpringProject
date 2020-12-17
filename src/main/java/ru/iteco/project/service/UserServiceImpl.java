@@ -2,16 +2,29 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.UserSearchDto;
 import ru.iteco.project.dao.TaskRepository;
 import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.domain.User;
+import ru.iteco.project.domain.UserRole;
+import ru.iteco.project.domain.UserStatus;
+import ru.iteco.project.exception.InvalidUserRoleException;
+import ru.iteco.project.exception.InvalidUserStatusException;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,8 +86,8 @@ public class UserServiceImpl implements UserService {
         if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())
                 && isEqualsUserStatus(CREATED, userDtoRequest.getUserStatus())) {
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
-            userRepository.save(newUser);
-            userDtoResponse = userMapper.entityToResponseDto(newUser);
+            User save = userRepository.save(newUser);
+            userDtoResponse = userMapper.entityToResponseDto(save);
         }
         return userDtoResponse;
     }
@@ -87,8 +100,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public List<UserDtoResponse> createBundleUsers(List<UserDtoRequest> userDtoRequestList) {
         List<User> usersList = userDtoRequestList.stream().map(userMapper::requestDtoToEntity).collect(Collectors.toList());
-        userRepository.saveAll(usersList);
-        return usersList.stream().map(userMapper::entityToResponseDto).collect(Collectors.toList());
+        List<User> users = userRepository.saveAll(usersList);
+        return users.stream().map(userMapper::entityToResponseDto).collect(Collectors.toList());
     }
 
     /**
@@ -102,8 +115,8 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsById(id) && Objects.equals(id, userDtoRequest.getId())) {
             User user = userMapper.requestDtoToEntity(userDtoRequest);
             user.setId(id);
-            userRepository.save(user);
-            userDtoResponse = userMapper.entityToResponseDto(user);
+            User save = userRepository.save(user);
+            userDtoResponse = userMapper.entityToResponseDto(save);
         }
         return userDtoResponse;
     }
@@ -155,4 +168,52 @@ public class UserServiceImpl implements UserService {
     private boolean isCorrectLoginEmail(String login, String email) {
         return !userRepository.existsByEmailOrLogin(email, login);
     }
+
+
+    public PageDto<UserDtoResponse> getUsers(SearchDto<UserSearchDto> searchDto, Pageable pageable) {
+        Page<User> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = userRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = userRepository.findAll(pageable);
+        }
+
+        List<UserDtoResponse> userDtoResponses = page.map(userMapper::entityToResponseDto).toList();
+        return new PageDto<>(userDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<User> getSpec(SearchDto<UserSearchDto> searchDto) {
+        SpecificationSupport<User> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            UserSearchDto userSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(userSearchDto.getRole())) {
+                UserRole userRole = userMapper.getUserRoleRepository()
+                        .findUserRoleByValue(userSearchDto.getRole())
+                        .orElseThrow(InvalidUserRoleException::new);
+
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "role"), userRole));
+            }
+
+            if (!ObjectUtils.isEmpty(userSearchDto.getUserStatus())) {
+                UserStatus userStatus = userMapper.getUserStatusRepository()
+                        .findUserStatusByValue(userSearchDto.getUserStatus())
+                        .orElseThrow(InvalidUserStatusException::new);
+
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "userStatus"), userStatus));
+            }
+            return builder.and(predicates.toArray(new Predicate[]{}));
+        };
+    }
+
 }

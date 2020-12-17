@@ -2,16 +2,24 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserRoleDtoRequest;
 import ru.iteco.project.controller.dto.UserRoleDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.UserRoleSearchDto;
 import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.dao.UserRoleRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserRole;
 import ru.iteco.project.service.mappers.UserRoleDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
 import java.util.*;
 
@@ -77,8 +85,8 @@ public class UserRoleServiceImpl implements UserRoleService {
         UserRoleDtoResponse userRoleDtoResponse = new UserRoleDtoResponse();
         if (operationIsAllow(userRoleDtoRequest)) {
             UserRole newUserRole = userRoleDtoEntityMapper.requestDtoToEntity(userRoleDtoRequest);
-            userRoleRepository.save(newUserRole);
-            userRoleDtoResponse = userRoleDtoEntityMapper.entityToResponseDto(newUserRole);
+            UserRole save = userRoleRepository.save(newUserRole);
+            userRoleDtoResponse = userRoleDtoEntityMapper.entityToResponseDto(save);
         }
         return userRoleDtoResponse;
     }
@@ -98,8 +106,8 @@ public class UserRoleServiceImpl implements UserRoleService {
 
             UserRole userRole = userRoleDtoEntityMapper.requestDtoToEntity(userRoleDtoRequest);
             userRole.setId(id);
-            userRoleRepository.save(userRole);
-            userRoleDtoResponse = userRoleDtoEntityMapper.entityToResponseDto(userRole);
+            UserRole save = userRoleRepository.save(userRole);
+            userRoleDtoResponse = userRoleDtoEntityMapper.entityToResponseDto(save);
         }
         return userRoleDtoResponse;
     }
@@ -155,4 +163,37 @@ public class UserRoleServiceImpl implements UserRoleService {
         }
         return false;
     }
+
+    public PageDto<UserRoleDtoResponse> getRoles(SearchDto<UserRoleSearchDto> searchDto, Pageable pageable) {
+        Page<UserRole> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = userRoleRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = userRoleRepository.findAll(pageable);
+        }
+
+        List<UserRoleDtoResponse> userRoleDtoResponses = page.map(userRoleDtoEntityMapper::entityToResponseDto).toList();
+        return new PageDto<>(userRoleDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<UserRole> getSpec(SearchDto<UserRoleSearchDto> searchDto) {
+        SpecificationSupport<UserRole> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            UserRoleSearchDto userRoleSearchDto = searchDto.searchData();
+
+            if (!ObjectUtils.isEmpty(userRoleSearchDto.getValue())) {
+                return builder.equal(specSupport.getPath(root, "value"), userRoleSearchDto.getValue());
+            }
+            return builder.and();
+        };
+    }
+
 }

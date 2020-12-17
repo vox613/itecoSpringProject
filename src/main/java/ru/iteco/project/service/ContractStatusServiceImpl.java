@@ -2,11 +2,18 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.ContractStatusDtoRequest;
 import ru.iteco.project.controller.dto.ContractStatusDtoResponse;
+import ru.iteco.project.controller.searching.ContractStatusSearchDto;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
 import ru.iteco.project.dao.ContractRepository;
 import ru.iteco.project.dao.ContractStatusRepository;
 import ru.iteco.project.dao.UserRepository;
@@ -14,7 +21,9 @@ import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.ContractStatus;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.ContractStatusDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
@@ -82,8 +91,8 @@ public class ContractStatusServiceImpl implements ContractStatusService {
         ContractStatusDtoResponse contractStatusDtoResponse = new ContractStatusDtoResponse();
         if (operationIsAllow(contractStatusDtoRequest)) {
             ContractStatus newContractStatus = contractStatusDtoEntityMapper.requestDtoToEntity(contractStatusDtoRequest);
-            contractStatusRepository.save(newContractStatus);
-            contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(newContractStatus);
+            ContractStatus save = contractStatusRepository.save(newContractStatus);
+            contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return contractStatusDtoResponse;
     }
@@ -102,8 +111,8 @@ public class ContractStatusServiceImpl implements ContractStatusService {
 
             ContractStatus contractStatus = contractStatusDtoEntityMapper.requestDtoToEntity(contractStatusDtoRequest);
             contractStatus.setId(id);
-            contractStatusRepository.save(contractStatus);
-            contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(contractStatus);
+            ContractStatus save = contractStatusRepository.save(contractStatus);
+            contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return contractStatusDtoResponse;
     }
@@ -153,5 +162,45 @@ public class ContractStatusServiceImpl implements ContractStatusService {
             }
         }
         return false;
+    }
+
+    public PageDto<ContractStatusDtoResponse> getStatus(SearchDto<ContractStatusSearchDto> searchDto, Pageable pageable) {
+        Page<ContractStatus> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = contractStatusRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = contractStatusRepository.findAll(pageable);
+        }
+
+        List<ContractStatusDtoResponse> ContractStatusDtoResponses = page.map(contractStatusDtoEntityMapper::entityToResponseDto).toList();
+        return new PageDto<>(ContractStatusDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<ContractStatus> getSpec(SearchDto<ContractStatusSearchDto> searchDto) {
+        SpecificationSupport<ContractStatus> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            ContractStatusSearchDto ContractStatusSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(ContractStatusSearchDto.getValue())) {
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "value"),
+                        ContractStatusSearchDto.getValue()));
+            }
+
+            if (!ObjectUtils.isEmpty(ContractStatusSearchDto.getDescription())) {
+                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
+                        ContractStatusSearchDto.getDescription()));
+            }
+
+            return builder.or(predicates.toArray(new Predicate[]{}));
+        };
     }
 }

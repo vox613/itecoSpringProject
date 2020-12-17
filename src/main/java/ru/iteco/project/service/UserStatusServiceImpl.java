@@ -2,17 +2,26 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserStatusDtoRequest;
 import ru.iteco.project.controller.dto.UserStatusDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.UserStatusSearchDto;
 import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.dao.UserStatusRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserStatus;
 import ru.iteco.project.service.mappers.UserStatusDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
@@ -75,8 +84,8 @@ public class UserStatusServiceImpl implements UserStatusService {
         UserStatusDtoResponse userStatusDtoResponse = new UserStatusDtoResponse();
         if (operationIsAllow(userStatusDtoRequest)) {
             UserStatus newUserStatus = userStatusDtoEntityMapper.requestDtoToEntity(userStatusDtoRequest);
-            userStatusRepository.save(newUserStatus);
-            userStatusDtoResponse = userStatusDtoEntityMapper.entityToResponseDto(newUserStatus);
+            UserStatus save = userStatusRepository.save(newUserStatus);
+            userStatusDtoResponse = userStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return userStatusDtoResponse;
     }
@@ -96,8 +105,8 @@ public class UserStatusServiceImpl implements UserStatusService {
 
             UserStatus userStatus = userStatusDtoEntityMapper.requestDtoToEntity(userStatusDtoRequest);
             userStatus.setId(id);
-            userStatusRepository.save(userStatus);
-            userStatusDtoResponse = userStatusDtoEntityMapper.entityToResponseDto(userStatus);
+            UserStatus save = userStatusRepository.save(userStatus);
+            userStatusDtoResponse = userStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return userStatusDtoResponse;
     }
@@ -150,4 +159,47 @@ public class UserStatusServiceImpl implements UserStatusService {
         }
         return false;
     }
+
+
+    public PageDto<UserStatusDtoResponse> getStatus(SearchDto<UserStatusSearchDto> searchDto, Pageable pageable) {
+        Page<UserStatus> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = userStatusRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = userStatusRepository.findAll(pageable);
+        }
+
+        List<UserStatusDtoResponse> userStatusDtoResponses = page.map(userStatusDtoEntityMapper::entityToResponseDto).toList();
+        return new PageDto<>(userStatusDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<UserStatus> getSpec(SearchDto<UserStatusSearchDto> searchDto) {
+        SpecificationSupport<UserStatus> specSupport = new SpecificationSupport<>();
+
+        return (root, query, builder) -> {
+            UserStatusSearchDto userStatusSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(userStatusSearchDto.getValue())) {
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "value"),
+                        userStatusSearchDto.getValue()));
+            }
+
+            if (!ObjectUtils.isEmpty(userStatusSearchDto.getDescription())) {
+                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
+                        userStatusSearchDto.getDescription()));
+            }
+            return builder.or(predicates.toArray(new Predicate[]{}));
+        };
+    }
+
 }
+
+

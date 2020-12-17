@@ -1,5 +1,8 @@
 package ru.iteco.project.controller;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -9,6 +12,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.controller.dto.TaskBaseDto;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.TaskSearchDto;
 import ru.iteco.project.service.TaskService;
 import ru.iteco.project.validator.TaskDtoRequestValidator;
 
@@ -73,6 +78,24 @@ public class TaskController {
 
 
     /**
+     * Эндпоинт с реализацией пагинации и сортировки результатов поиска
+     *
+     * @param taskSearchDto - dto объект который задает значения полей по которым будет осуществляться поиск данных
+     * @param pageable      - объект пагинации с информацией о размере/наполнении/сортировке данных на странице
+     * @return - объект PageDto с результатами соответствующими критериям запроса
+     */
+    @GetMapping(path = "/search")
+    public PageDto<TaskDtoResponse> getTasks(@RequestBody(required = false) TaskSearchDto taskSearchDto,
+                                             @PageableDefault(size = 5,
+                                                     page = 0,
+                                                     sort = {"createdAt"},
+                                                     direction = Sort.Direction.ASC) Pageable pageable) {
+
+        return taskService.getTasks(taskSearchDto, pageable);
+    }
+
+
+    /**
      * Создает новое задание для заказчика
      *
      * @param taskDtoRequest - тело запроса на создание задания
@@ -108,7 +131,7 @@ public class TaskController {
     /**
      * Обновляет существующее задание {id} от имени заказчика {userId}
      *
-     * @param id         - уникальный идентификатор задания
+     * @param id             - уникальный идентификатор задания
      * @param taskDtoRequest - тело запроса с данными для обновления
      */
     @PutMapping(value = "/{id}")

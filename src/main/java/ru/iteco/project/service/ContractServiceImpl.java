@@ -2,11 +2,18 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
+import ru.iteco.project.controller.searching.ContractSearchDto;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
 import ru.iteco.project.dao.ContractRepository;
 import ru.iteco.project.dao.TaskRepository;
 import ru.iteco.project.dao.UserRepository;
@@ -14,11 +21,13 @@ import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.ContractStatus;
 import ru.iteco.project.domain.Task;
 import ru.iteco.project.domain.User;
+import ru.iteco.project.exception.InvalidContractStatusException;
 import ru.iteco.project.service.mappers.ContractDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
+import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static ru.iteco.project.domain.ContractStatus.ContractStatusEnum.*;
@@ -120,7 +129,6 @@ public class ContractServiceImpl implements ContractService {
                 userRepository.save(customer);
                 userDtoEntityMapper.updateUserStatus(executor, ACTIVE);
 
-                task.setLastTaskUpdateDate(LocalDateTime.now());
                 task.setExecutor(executor);
                 contractDtoEntityMapper.updateTaskStatus(task, IN_PROGRESS);
 
@@ -128,9 +136,9 @@ public class ContractServiceImpl implements ContractService {
                 contract.setExecutor(executor);
                 contract.setTask(task);
                 contract.setCustomer(task.getCustomer());
-                contractRepository.save(contract);
+                Contract save = contractRepository.save(contract);
 
-                contractDtoResponse = enrichContractInfo(contract);
+                contractDtoResponse = enrichContractInfo(save);
             }
         }
         return contractDtoResponse;
@@ -157,8 +165,8 @@ public class ContractServiceImpl implements ContractService {
                 if (allowToUpdate(user, contract)) {
                     contractDtoEntityMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole().getValue());
                     transferFunds(contract);
-                    contractRepository.save(contract);
-                    contractDtoResponse = enrichContractInfo(contract);
+                    Contract save = contractRepository.save(contract);
+                    contractDtoResponse = enrichContractInfo(save);
                 }
             }
         }
@@ -255,5 +263,49 @@ public class ContractServiceImpl implements ContractService {
                 || isEqualsTaskStatus(CANCELED, contract.getTask());
 
         return userNotBlocked && userIsCustomer && contractIsPaid && taskInTerminatedStatus;
+    }
+
+
+    public PageDto<ContractDtoResponse> getContracts(SearchDto<ContractSearchDto> searchDto, Pageable pageable) {
+        Page<Contract> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = contractRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = contractRepository.findAll(pageable);
+        }
+
+        List<ContractDtoResponse> contractDtoResponses = page.map(this::enrichContractInfo).toList();
+        return new PageDto<>(contractDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<Contract> getSpec(SearchDto<ContractSearchDto> searchDto) {
+        SpecificationSupport<Contract> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            ContractSearchDto contractSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(contractSearchDto.getContractStatus())) {
+                ContractStatus contractStatus = contractDtoEntityMapper.getContractStatusRepository()
+                        .findContractStatusByValue(contractSearchDto.getContractStatus())
+                        .orElseThrow(InvalidContractStatusException::new);
+
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "contractStatus"), contractStatus));
+            }
+
+            if (!ObjectUtils.isEmpty(contractSearchDto.getCreatedAt())) {
+                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "createdAt"),
+                        contractSearchDto.getCreatedAt()));
+            }
+
+            return builder.and(predicates.toArray(new Predicate[]{}));
+        };
     }
 }
