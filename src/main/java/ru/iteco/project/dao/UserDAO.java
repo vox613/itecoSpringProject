@@ -1,9 +1,9 @@
 package ru.iteco.project.dao;
 
-import ru.iteco.project.model.Role;
 import ru.iteco.project.model.User;
+import ru.iteco.project.model.UserRole;
+import ru.iteco.project.model.UserStatus;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,37 +38,7 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      * @return - объект пользователя, соответствующий данному логину,
      * или null, если пользователя с данным лолгином нет в коллекции
      */
-    User findUserByLogin(String login);
-
-    /**
-     * Метод осуществляет поиск пользователя по email
-     *
-     * @param email - email пользователя
-     * @return - объект пользователя, соответствующий данному email,
-     * или null, если пользователя с данным email нет в коллекции
-     */
-    User findUserByEmail(String email);
-
-    /**
-     * Метод осуществляет поиск пользователя по ФИО
-     *
-     * @param firstName  - имя пользователя
-     * @param secondName - фамилия пользователя
-     * @param lastName   - отчество пользователя
-     * @return - объект пользователя, соответствующий данному ФИО,
-     * или null, если пользователя с данным ФИО нет в коллекции
-     */
-    User findUserByFIO(String firstName, String secondName, String lastName);
-
-    /**
-     * Метод осуществляет поиск пользователя по логину или Email
-     *
-     * @param login - логин пользователя
-     * @param email - Email пользователя
-     * @return - объект пользователя, соответствующий данному логину или Email,
-     * или null, если пользователя с данным лолгином или Email нет в коллекции
-     */
-    User findUserByLoginOrEmail(String login, String email);
+    Optional<User> findUserByLogin(String login);
 
     /**
      * Метод осуществляет поиск всех пользователей по заданной роли
@@ -76,14 +46,15 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      * @param role - роль пользователя
      * @return - список всех пользователей с указанной ролью
      */
-    List<User> getAllUsersByRole(Role role);
+    List<User> getAllUsersByRole(UserRole role);
 
     /**
-     * Метод получения списка всех пользователей из коллекции
+     * Метод осуществляет поиск всех пользователей по заданному статусу
      *
-     * @return - список вссех пользователей в коллекции
+     * @param userStatus - статус пользователя
+     * @return - список всех пользователей с указанным статусом
      */
-    Collection<User> getAllUsers();
+    List<User> getAllUsersByStatus(UserStatus userStatus);
 
     /**
      * Метод получения пользователя по id
@@ -102,4 +73,11 @@ public interface UserDAO extends GenericDAO<User, UUID> {
      */
     boolean userWithIdIsExist(UUID uuid);
 
+    /**
+     * Метод обновления статуса пользователя
+     * @param user - сущность пользователя
+     * @param userStatusEnum - элеммент перечисления статусов пользователя
+     * @return - Optional с обновленным объектом User
+     */
+    Optional<User> updateUserStatus(User user, UserStatus.UserStatusEnum userStatusEnum);
 }

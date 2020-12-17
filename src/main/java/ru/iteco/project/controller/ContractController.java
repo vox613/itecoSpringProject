@@ -1,7 +1,5 @@
 package ru.iteco.project.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -23,7 +21,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping(value = "/api/v1/contracts")
-@PropertySource(value = {"classpath:errors.properties"})
 public class ContractController {
 
     /*** Объект сервисного слоя для Contract*/
@@ -31,9 +28,6 @@ public class ContractController {
 
     /*** Объект валидатора для ContractDtoRequest*/
     private final ContractDtoRequestValidator contractDtoRequestValidator;
-
-    @Value("${errors.id.mismatched}")
-    private String mismatchedIdMessage;
 
 
     public ContractController(ContractService contractService, ContractDtoRequestValidator contractDtoRequestValidator) {
@@ -63,7 +57,7 @@ public class ContractController {
     @GetMapping(value = "/{id}")
     public ResponseEntity<ContractDtoResponse> getContract(@PathVariable UUID id) {
         ContractDtoResponse contractById = contractService.getContractById(id);
-        if (contractById.getId() != null) {
+        if ((contractById != null) && (contractById.getId() != null)) {
             return ResponseEntity.ok().body(contractById);
         } else {
             return ResponseEntity.notFound().build();
@@ -79,21 +73,26 @@ public class ContractController {
      * или тело запроса с id = null, если создать контракт не удалось
      */
     @PostMapping
-    public ResponseEntity<ContractDtoRequest> createContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
-                                                             UriComponentsBuilder componentsBuilder,
-                                                             BindingResult result) {
+    public ResponseEntity<? extends ContractBaseDto> createContract(@Validated @RequestBody ContractDtoRequest contractDtoRequest,
+                                                                    UriComponentsBuilder componentsBuilder,
+                                                                    BindingResult result) {
 
         if (result.hasErrors()) {
             contractDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
         }
 
-        ContractDtoRequest contract = contractService.createContract(contractDtoRequest);
-        if (contract.getId() != null) {
-            URI uri = componentsBuilder.path(String.format("/contracts/%s", contract.getId())).buildAndExpand(contract).toUri();
-            return ResponseEntity.created(uri).body(contract);
+        ContractDtoResponse contractDtoResponse = contractService.createContract(contractDtoRequest);
+
+        if (contractDtoResponse != null) {
+            URI uri = componentsBuilder
+                    .path(String.format("/contracts/%s", contractDtoResponse.getId()))
+                    .buildAndExpand(contractDtoResponse)
+                    .toUri();
+
+            return ResponseEntity.created(uri).body(contractDtoResponse);
         } else {
-            return ResponseEntity.badRequest().body(contract);
+            return ResponseEntity.unprocessableEntity().build();
         }
     }
 

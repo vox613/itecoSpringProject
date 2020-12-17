@@ -21,13 +21,13 @@ public class Task implements Identified<UUID> {
     private User executor;
 
     /*** Имя задания */
-    private String name;
+    private String title;
 
     /*** Описание задания */
     private String description;
 
     /*** Время и дата размещения задания */
-    private final LocalDateTime taskCreationDate = LocalDateTime.now();
+    private LocalDateTime taskCreationDate = LocalDateTime.now();
 
     /*** Дата и время до наступления которой необходимо выполнить задание */
     private LocalDateTime taskCompletionDate;
@@ -67,12 +67,12 @@ public class Task implements Identified<UUID> {
         this.executor = executor;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getDescription() {
@@ -85,6 +85,10 @@ public class Task implements Identified<UUID> {
 
     public LocalDateTime getTaskCreationDate() {
         return taskCreationDate;
+    }
+
+    public void setTaskCreationDate(LocalDateTime taskCreationDate) {
+        this.taskCreationDate = taskCreationDate;
     }
 
     public LocalDateTime getTaskCompletionDate() {

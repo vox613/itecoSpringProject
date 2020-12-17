@@ -6,7 +6,7 @@
 
     <include file="user_statuses.xml" relativeToChangelogFile="true"/>
     <include file="user_roles.xml" relativeToChangelogFile="true"/>
-    <include file="user.xml" relativeToChangelogFile="true"/>
+    <include file="users.xml" relativeToChangelogFile="true"/>
     <include file="task_statuses.xml" relativeToChangelogFile="true"/>
     <include file="task.xml" relativeToChangelogFile="true"/>
     <include file="contract_statuses.xml" relativeToChangelogFile="true"/>

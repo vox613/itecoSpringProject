@@ -70,7 +70,7 @@ public class TaskController {
     @GetMapping(value = "/{id}")
     public ResponseEntity<TaskDtoResponse> getTask(@PathVariable UUID id) {
         TaskDtoResponse taskById = taskService.getTaskById(id);
-        if (taskById.getId() != null) {
+        if ((taskById != null) && (taskById.getId() != null)) {
             return ResponseEntity.ok().body(taskById);
         } else {
             return ResponseEntity.notFound().build();
@@ -86,22 +86,28 @@ public class TaskController {
      * * или тело запроса с id = null, если создать задание не удалось
      */
     @PostMapping
-    public ResponseEntity<TaskDtoRequest> createTask(@Validated @RequestBody TaskDtoRequest taskDtoRequest,
-                                                     BindingResult result,
-                                                     UriComponentsBuilder componentsBuilder) {
+    public ResponseEntity<? extends TaskBaseDto> createTask(@Validated @RequestBody TaskDtoRequest taskDtoRequest,
+                                                            BindingResult result,
+                                                            UriComponentsBuilder componentsBuilder) {
 
         if (result.hasErrors()) {
             taskDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(taskDtoRequest);
         }
 
-        TaskDtoRequest task = taskService.createTask(taskDtoRequest);
-        if (task.getId() != null) {
-            URI uri = componentsBuilder.path(String.format("/tasks/%s", task.getId())).buildAndExpand(task).toUri();
-            return ResponseEntity.created(uri).body(task);
+        TaskDtoResponse taskDtoResponse = taskService.createTask(taskDtoRequest);
+
+        if (taskDtoResponse != null) {
+            URI uri = componentsBuilder
+                    .path(String.format("/tasks/%s", taskDtoResponse.getId()))
+                    .buildAndExpand(taskDtoResponse)
+                    .toUri();
+
+            return ResponseEntity.created(uri).body(taskDtoResponse);
         } else {
-            return ResponseEntity.badRequest().body(task);
+            return ResponseEntity.unprocessableEntity().build();
         }
+
     }
 
 

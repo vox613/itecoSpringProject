@@ -10,6 +10,7 @@ import java.util.UUID;
  */
 public class TaskDtoRequest extends TaskBaseDto {
 
+
     /*** Уникальный id пользователя инициировавшего действие */
     private UUID userId;
 

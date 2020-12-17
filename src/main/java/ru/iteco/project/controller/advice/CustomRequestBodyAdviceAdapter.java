@@ -19,12 +19,17 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Класс-расширение функционала контроллеров
+ */
 @RestControllerAdvice
 @PropertySource(value = {"classpath:errors.properties"})
 public class CustomRequestBodyAdviceAdapter extends RequestBodyAdviceAdapter {
 
+    /*** Объект предоставляет информацию о запросе для сервлетов HTTP */
     private final HttpServletRequest httpServletRequest;
 
+    /*** Текст ошибки несовпадающих id в pathVariable и теле запроса для метода PUT*/
     @Value("${errors.id.mismatched}")
     private String mismatchedIdMessage;
 
@@ -40,6 +45,7 @@ public class CustomRequestBodyAdviceAdapter extends RequestBodyAdviceAdapter {
         return methodParameter.getAnnotatedElement().getAnnotation(PutMapping.class) != null;
     }
 
+
     @Override
     public Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
         Object attribute = httpServletRequest.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
@@ -48,13 +54,19 @@ public class CustomRequestBodyAdviceAdapter extends RequestBodyAdviceAdapter {
             String pathVariableId = (String) pathVariables.get("id");
 
             boolean same = true;
+            boolean instanceFound = false;
+
             if (body instanceof UserDtoRequest) {
                 UserDtoRequest userDtoRequest = (UserDtoRequest) body;
                 same = Objects.equals(pathVariableId, String.valueOf(userDtoRequest.getId()));
-            } else if (body instanceof TaskDtoRequest) {
+                instanceFound = true;
+            }
+            if (!instanceFound && (body instanceof TaskDtoRequest)) {
                 TaskDtoRequest taskDtoRequest = (TaskDtoRequest) body;
                 same = Objects.equals(pathVariableId, String.valueOf(taskDtoRequest.getId()));
-            } else if (body instanceof ContractDtoRequest) {
+                instanceFound = true;
+            }
+            if (!instanceFound && (body instanceof ContractDtoRequest)) {
                 ContractDtoRequest contractDtoRequest = (ContractDtoRequest) body;
                 same = Objects.equals(pathVariableId, String.valueOf(contractDtoRequest.getId()));
             }

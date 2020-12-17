@@ -3,114 +3,98 @@ package ru.iteco.project.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
 import ru.iteco.project.dao.ContractDAO;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
-import ru.iteco.project.model.*;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.ContractStatus;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.User;
 import ru.iteco.project.service.mappers.ContractDtoEntityMapper;
+import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static ru.iteco.project.model.ContractStatus.ContractStatusEnum.*;
+import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.DONE;
+import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.*;
+import static ru.iteco.project.model.UserRole.UserRoleEnum.EXECUTOR;
+import static ru.iteco.project.model.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.model.UserStatus.UserStatusEnum.*;
+
 
 /**
  * Класс реализует функционал сервисного слоя для работы с контрактами
  */
 @Service
 public class ContractServiceImpl implements ContractService {
-
-
     private static final Logger log = LogManager.getLogger(ContractServiceImpl.class.getName());
 
-    private final UserDAO userDAO;
     private final ContractDAO contractDAO;
+    private final UserDAO userDAO;
     private final TaskDAO taskDAO;
     private final ContractDtoEntityMapper contractMapper;
-    private final TaskServiceImpl taskService;
-    private final UserService userService;
+    private final UserDtoEntityMapper userDtoEntityMapper;
+    private final TaskService taskService;
 
 
-    public ContractServiceImpl(UserDAO userDAO, ContractDAO contractDAO, TaskDAO taskDAO,
-                               ContractDtoEntityMapper contractMapper, TaskServiceImpl taskService,
-                               UserService userService) {
-        this.userDAO = userDAO;
+    public ContractServiceImpl(ContractDAO contractDAO, UserDAO userDAO, TaskDAO taskDAO, ContractDtoEntityMapper contractMapper,
+                               UserDtoEntityMapper userDtoEntityMapper, TaskService taskService) {
         this.contractDAO = contractDAO;
+        this.userDAO = userDAO;
         this.taskDAO = taskDAO;
         this.contractMapper = contractMapper;
+        this.userDtoEntityMapper = userDtoEntityMapper;
         this.taskService = taskService;
-        this.userService = userService;
     }
 
 
     /**
-     * Метод сохранения договора в коллекцию
-     *
-     * @param contract - договор для сохраннения
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
      */
     @Override
-    public void createContract(Contract contract) {
-        contractDAO.save(contract);
-        log.info("now: " + LocalDateTime.now() + " createContract: " + contract);
-    }
-
-    /**
-     * Метод удаления из коллекции переданного договора
-     *
-     * @param contract - договор для удаления
-     * @return - удаленный договор
-     */
-    @Override
-    public Contract deleteContract(Contract contract) {
-        Contract deletedContract = contractDAO.delete(contract);
-        log.info("now: " + LocalDateTime.now() + " deletedContract: " + deletedContract);
-        return deletedContract;
-    }
-
-    /**
-     * Метод изменения статуса договора на переданный в агументах
-     *
-     * @param contract       - договор статус которого необходимо изменить
-     * @param contractStatus - статус на которой меняется состояние договора
-     */
-    @Override
-    public void changeContractStatusTo(Contract contract, ContractStatus contractStatus) {
-        contract.setContractStatus(contractStatus);
-        contractDAO.update(contract);
-        log.info("now: " + LocalDateTime.now() + " changeContractStatusTo: " + contract + "StatusTo: " + contractStatus);
-    }
-
-    /**
-     * Метод получает все договоры из коллекции
-     *
-     * @return - список всех договоров из коллекции
-     */
-    @Override
+    @Transactional(readOnly = true)
     public List<ContractDtoResponse> getAllContracts() {
         ArrayList<ContractDtoResponse> contractDtoResponses = new ArrayList<>();
         for (Contract contract : contractDAO.getAll()) {
-            contractDtoResponses.add(getContractById(contract.getId()));
+            contractDtoResponses.add(enrichContractInfo(contract));
         }
         return contractDtoResponses;
     }
 
+    /**
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     */
     @Override
+    @Transactional(readOnly = true)
     public ContractDtoResponse getContractById(UUID id) {
-        ContractDtoResponse contractDtoResponse = new ContractDtoResponse();
+        ContractDtoResponse contractDtoResponse = null;
         Optional<Contract> optionalContract = contractDAO.findContractById(id);
         if (optionalContract.isPresent()) {
             Contract contract = optionalContract.get();
-            contractDtoResponse = contractMapper.entityToResponseDto(contract);
-            contractDtoResponse.setCustomer(userService.getUserById(contract.getCustomer().getId()));
-            contractDtoResponse.setExecutor(userService.getUserById(contract.getExecutor().getId()));
-            contractDtoResponse.setTask(taskService.getTaskById(contract.getTask().getId()));
+            contractDtoResponse = enrichContractInfo(contract);
         }
         return contractDtoResponse;
     }
 
+
+    /**
+     * SERIALIZABLE - т.к. во время модификации и создание новых данных не должно быть влияния извне
+     * REQUIRED - в транзакции внешней или новой
+     */
     @Override
-    public ContractDtoRequest createContract(ContractDtoRequest contractDtoRequest) {
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ContractDtoResponse createContract(ContractDtoRequest contractDtoRequest) {
+        ContractDtoResponse contractDtoResponse = null;
         Optional<Task> taskById = taskDAO.findTaskById(contractDtoRequest.getTaskId());
         Optional<User> executorById = userDAO.findUserById(contractDtoRequest.getExecutorId());
         if (taskById.isPresent() && executorById.isPresent()) {
@@ -118,38 +102,42 @@ public class ContractServiceImpl implements ContractService {
             User customer = task.getCustomer();
             User executor = executorById.get();
 
-            if (TaskStatus.TASK_REGISTERED.equals(task.getTaskStatus())
+            if (isEqualsTaskStatus(REGISTERED, task)
                     && usersNotBlocked(customer, executor)
-                    && respectiveUserRole(executor)
+                    && isEqualsUserRole(EXECUTOR, executor)
                     && isCorrectConfirmCodes(contractDtoRequest.getConfirmationCode(), contractDtoRequest.getRepeatConfirmationCode())
                     && customerHaveEnoughMoney(task)) {
 
                 customer.setWallet(customer.getWallet().subtract(task.getPrice()));
-                userDAO.save(customer);
+                userDAO.update(customer);
+                userDAO.updateUserStatus(executor, ACTIVE);
 
-                executor.setUserStatus(UserStatus.ACTIVE);
-                userDAO.save(executor);
-
-                Contract contract = contractMapper.requestDtoToEntity(contractDtoRequest);
-                contract.setContractStatus(ContractStatus.PAID);
-                contractDAO.save(contract);
-
-                task.setTaskStatus(TaskStatus.TASK_IN_PROGRESS);
                 task.setLastTaskUpdateDate(LocalDateTime.now());
                 task.setExecutor(executor);
-                taskDAO.save(task);
+                taskDAO.updateTaskStatus(task, IN_PROGRESS);
 
-                contractDtoRequest.setId(contract.getId());
-                contractDtoRequest.setContractStatus(contract.getContractStatus().name());
+                Contract contract = contractMapper.requestDtoToEntity(contractDtoRequest);
+                contract.setExecutor(executor);
+                contract.setTask(task);
+                contract.setCustomer(task.getCustomer());
+                contractDAO.save(contract);
+
+                contractDtoResponse = enrichContractInfo(contract);
             }
         }
-        return contractDtoRequest;
+        return contractDtoResponse;
     }
 
+    /**
+     * SERIALIZABLE - т.к. во время модификации и создание новых данных не должно быть влияния извне
+     * REQUIRED - в транзакции внешней или новой
+     */
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public ContractDtoResponse updateContract(ContractDtoRequest contractDtoRequest) {
         ContractDtoResponse contractDtoResponse = null;
-        if (contractDtoRequest.getUserId() != null  && contractDAO.contractWithIdIsExist(contractDtoRequest.getId())) {
+        if (contractDtoRequest.getUserId() != null && contractDAO.contractWithIdIsExist(contractDtoRequest.getId())) {
+
             Optional<User> userOptional = userDAO.findUserById(contractDtoRequest.getUserId());
             Optional<Contract> contractById = contractDAO.findContractById(contractDtoRequest.getId());
             if (userOptional.isPresent() && contractById.isPresent()) {
@@ -157,7 +145,10 @@ public class ContractServiceImpl implements ContractService {
                 Contract contract = contractById.get();
 
                 if (allowToUpdate(user, contract)) {
-                    contractMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole());
+                    contractMapper.requestDtoToEntity(contractDtoRequest, contract, user.getRole().getValue());
+                    transferFunds(contract);
+                    userDAO.update(contract.getCustomer());
+                    userDAO.update(contract.getExecutor());
                     contractDAO.update(contract);
                     contractDtoResponse = enrichContractInfo(contract);
                 }
@@ -166,9 +157,26 @@ public class ContractServiceImpl implements ContractService {
         return contractDtoResponse;
     }
 
+
+    /**
+     * SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
+     * REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
+     * должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
+     */
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteContract(UUID id) {
         return contractDAO.deleteByPK(id) != null;
+    }
+
+
+    @Override
+    public ContractDtoResponse enrichContractInfo(Contract contract) {
+        ContractDtoResponse contractDtoResponse = contractMapper.entityToResponseDto(contract);
+        contractDtoResponse.setCustomer(userDtoEntityMapper.entityToResponseDto(contract.getCustomer()));
+        contractDtoResponse.setExecutor(userDtoEntityMapper.entityToResponseDto(contract.getExecutor()));
+        contractDtoResponse.setTask(taskService.enrichByUsersInfo(contract.getTask()));
+        return contractDtoResponse;
     }
 
 
@@ -176,6 +184,21 @@ public class ContractServiceImpl implements ContractService {
         return contractDAO;
     }
 
+    /**
+     * Метод осуществляет операция перечисления денежных средств на счет заказчика или исполнителя
+     * в зависимости от статуса договора в который он переводится
+     *
+     * @param contract - объект договора
+     */
+    private void transferFunds(Contract contract) {
+        if (isEqualsContractStatus(ContractStatus.ContractStatusEnum.DONE, contract)) {
+            User executor = contract.getExecutor();
+            executor.setWallet(executor.getWallet().add(contract.getTask().getPrice()));
+        } else if (isEqualsContractStatus(TERMINATED, contract)) {
+            User customer = contract.getCustomer();
+            customer.setWallet(customer.getWallet().add(contract.getTask().getPrice()));
+        }
+    }
 
     /**
      * Метод проверяет достаточно ли у заказчика денег для формирования договора оказания услуги
@@ -197,19 +220,9 @@ public class ContractServiceImpl implements ContractService {
      * @return - true - пользователи не заблокированы, false - пользователи заблокированы
      */
     private boolean usersNotBlocked(User customer, User executor) {
-        return !(UserStatus.BLOCKED.equals(customer.getUserStatus()) ||
-                UserStatus.BLOCKED.equals(executor.getUserStatus()));
+        return !(isEqualsUserStatus(BLOCKED, customer) || isEqualsUserStatus(BLOCKED, executor));
     }
 
-    /**
-     * Метод проверяет соответствие роли пользователя необходимой
-     *
-     * @param user - пользователь
-     * @return - true - пользователь имеет роль исполнителя, false -пользователь не имеет роль исполнителя
-     */
-    private boolean respectiveUserRole(User user) {
-        return Role.EXECUTOR.equals(user.getRole());
-    }
 
     /**
      * Метод проверяет правильность введенных кодов подтверждения
@@ -231,25 +244,12 @@ public class ContractServiceImpl implements ContractService {
      * контракт оплачен, false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Contract contract) {
-        boolean userNotBlocked = !UserStatus.BLOCKED.equals(user.getUserStatus());
+        boolean userNotBlocked = !isEqualsUserStatus(BLOCKED, user);
         boolean userIsCustomer = user.getId().equals(contract.getCustomer().getId());
-        boolean contractIsPaid = ContractStatus.PAID.equals(contract.getContractStatus());
-        boolean taskInTerminatedStatus = TaskStatus.TASK_DONE.equals(contract.getTask().getTaskStatus())
-                || TaskStatus.TASK_CANCELED.equals(contract.getTask().getTaskStatus());
+        boolean contractIsPaid = isEqualsContractStatus(PAID, contract);
+        boolean taskInTerminatedStatus = isEqualsTaskStatus(DONE, contract.getTask())
+                || isEqualsTaskStatus(CANCELED, contract.getTask());
 
-        return userNotBlocked && userIsCustomer && taskInTerminatedStatus && contractIsPaid;
-    }
-
-    /**
-     * Метод обогащает ContractDtoResponse данными о заказчике, исполнителе и задании
-     *
-     * @param contract - объект задания
-     */
-    private ContractDtoResponse enrichContractInfo(Contract contract) {
-        ContractDtoResponse contractDtoResponse = contractMapper.entityToResponseDto(contract);
-        contractDtoResponse.setCustomer(taskService.getUserMapper().entityToResponseDto(contract.getCustomer()));
-        contractDtoResponse.setExecutor(taskService.getUserMapper().entityToResponseDto(contract.getExecutor()));
-        contractDtoResponse.setTask(taskService.enrichByUsersInfo(contract.getTask()));
-        return contractDtoResponse;
+        return userNotBlocked && userIsCustomer && contractIsPaid && taskInTerminatedStatus;
     }
 }

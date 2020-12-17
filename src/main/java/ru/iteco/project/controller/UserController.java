@@ -31,7 +31,6 @@ public class UserController {
     private final UserDtoRequestValidator userDtoRequestValidator;
 
 
-
     public UserController(UserService userService, UserDtoRequestValidator userDtoRequestValidator) {
         this.userService = userService;
         this.userDtoRequestValidator = userDtoRequestValidator;
@@ -59,7 +58,7 @@ public class UserController {
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserDtoResponse> getUser(@PathVariable UUID id) {
         UserDtoResponse userById = userService.getUserById(id);
-        if (userById.getId() != null) {
+        if ((userById != null) && (userById.getId() != null)) {
             return ResponseEntity.ok().body(userById);
         } else {
             return ResponseEntity.notFound().build();
@@ -75,21 +74,40 @@ public class UserController {
      * * или тело запроса с id = null, если создать пользователя не удалось
      */
     @PostMapping
-    public ResponseEntity<UserDtoRequest> createUser(@Validated @RequestBody UserDtoRequest userDtoRequest,
-                                                     BindingResult result,
-                                                     UriComponentsBuilder componentsBuilder) {
+    public ResponseEntity<? extends UserBaseDto> createUser(@Validated @RequestBody UserDtoRequest userDtoRequest,
+                                                            BindingResult result,
+                                                            UriComponentsBuilder componentsBuilder) {
         if (result.hasErrors()) {
             userDtoRequest.setErrors(result.getAllErrors());
             return ResponseEntity.unprocessableEntity().body(userDtoRequest);
         }
 
-        UserDtoRequest user = userService.createUser(userDtoRequest);
-        if (user.getId() != null) {
-            URI uri = componentsBuilder.path("/users/" + user.getId()).buildAndExpand(user).toUri();
-            return ResponseEntity.created(uri).body(user);
+        UserDtoResponse userDtoResponse = userService.createUser(userDtoRequest);
+
+        if (userDtoResponse != null) {
+            URI uri = componentsBuilder.path("/users/" + userDtoResponse.getId()).buildAndExpand(userDtoResponse).toUri();
+            return ResponseEntity.created(uri).body(userDtoResponse);
         } else {
-            return ResponseEntity.badRequest().body(user);
+            return ResponseEntity.unprocessableEntity().build();
         }
+
+    }
+
+
+    /**
+     * Метод пакетного добаввления пользователей
+     *
+     * @param userDtoRequestList - список пользователей для добавления
+     * @param componentsBuilder  - билдер для формирования url ресура
+     * @return - список созданных пользователей в представлении UserDtoResponse
+     */
+    @PostMapping(value = "/batch")
+    public ResponseEntity<List<UserDtoResponse>> createBatchUser(@RequestBody ArrayList<UserDtoRequest> userDtoRequestList,
+                                                                 UriComponentsBuilder componentsBuilder) {
+
+        List<UserDtoResponse> bundleUsers = userService.createBundleUsers(userDtoRequestList);
+        URI uri = componentsBuilder.path("/").build().toUri();
+        return ResponseEntity.created(uri).body(bundleUsers);
     }
 
 

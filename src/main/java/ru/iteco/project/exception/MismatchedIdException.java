@@ -1,5 +1,8 @@
 package ru.iteco.project.exception;
 
+/**
+ *
+ */
 public class MismatchedIdException extends RuntimeException {
 
 
