@@ -4,25 +4,33 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.TaskSearchDto;
 import ru.iteco.project.dao.ContractRepository;
 import ru.iteco.project.dao.TaskRepository;
 import ru.iteco.project.dao.UserRepository;
-import ru.iteco.project.exception.UnavailableRoleOperationException;
 import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.Task;
+import ru.iteco.project.domain.TaskStatus;
 import ru.iteco.project.domain.User;
+import ru.iteco.project.exception.InvalidTaskStatusException;
+import ru.iteco.project.exception.UnavailableRoleOperationException;
 import ru.iteco.project.service.mappers.TaskDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import javax.persistence.criteria.Predicate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.*;
@@ -125,8 +133,8 @@ public class TaskServiceImpl implements TaskService {
             userMapper.updateUserStatus(user, ACTIVE);
             Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
             task.setCustomer(user);
-            taskRepository.save(task);
-            taskDtoResponse = enrichByUsersInfo(task);
+            Task save = taskRepository.save(task);
+            taskDtoResponse = enrichByUsersInfo(save);
         }
         return taskDtoResponse;
     }
@@ -150,8 +158,8 @@ public class TaskServiceImpl implements TaskService {
                 Task task = taskById.get();
                 if (allowToUpdate(user, task)) {
                     taskMapper.requestDtoToEntity(taskDtoRequest, task, user.getRole().getValue());
-                    taskRepository.save(task);
-                    taskDtoResponse = enrichByUsersInfo(task);
+                    Task save = taskRepository.save(task);
+                    taskDtoResponse = enrichByUsersInfo(save);
                 }
             }
         }
@@ -232,5 +240,63 @@ public class TaskServiceImpl implements TaskService {
         if (isEqualsUserRole(EXECUTOR, user) || isEqualsUserStatus(BLOCKED, user)) {
             throw new UnavailableRoleOperationException(unavailableOperationMessage);
         }
+    }
+
+    public PageDto<TaskDtoResponse> getTasks(SearchDto<TaskSearchDto> searchDto, Pageable pageable) {
+        Page<Task> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = taskRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = taskRepository.findAll(pageable);
+        }
+
+        List<TaskDtoResponse> taskDtoResponses = page.map(this::enrichByUsersInfo).toList();
+        return new PageDto<>(taskDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<Task> getSpec(SearchDto<TaskSearchDto> searchDto) {
+        SpecificationSupport<Task> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            TaskSearchDto taskSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(taskSearchDto.getTaskStatus())) {
+                TaskStatus taskStatus = taskMapper.getTaskStatusRepository()
+                        .findTaskStatusByValue(taskSearchDto.getTaskStatus())
+                        .orElseThrow(InvalidTaskStatusException::new);
+
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "taskStatus"), taskStatus));
+            }
+
+            if (!ObjectUtils.isEmpty(taskSearchDto.getCreatedAt())) {
+                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "createdAt"),
+                        taskSearchDto.getCreatedAt()));
+            }
+
+            if (!ObjectUtils.isEmpty(taskSearchDto.getMinPrice()) && !ObjectUtils.isEmpty(taskSearchDto.getMaxPrice())) {
+                predicates.add(specSupport.getBetweenPredicate(builder, specSupport.getPath(root, "price"),
+                        taskSearchDto.getMinPrice(), taskSearchDto.getMaxPrice()));
+            }
+
+            if (!ObjectUtils.isEmpty(taskSearchDto.getDescription())) {
+                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
+                        taskSearchDto.getDescription()));
+            }
+
+            if (!ObjectUtils.isEmpty(taskSearchDto.getTaskCompletionDate())) {
+                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "taskCompletionDate"),
+                        taskSearchDto.getTaskCompletionDate()));
+            }
+
+            return builder.or(predicates.toArray(new Predicate[]{}));
+        };
     }
 }

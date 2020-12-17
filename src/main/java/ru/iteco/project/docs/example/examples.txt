@@ -9,6 +9,16 @@ GET - http://localhost:8081/frilance/api/v1/users
 Получить пользователя с {id}
 GET - http://localhost:8081/frilance/api/v1/users/{id}
 
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=firstName)
+GET - http://localhost:8081/frilance/api/v1/users/search
+Опционально:
+{
+    "role": "EXECUTOR"
+    "userStatus": "CREATED"
+}
+
+
+
 Создать пользователя
 POST - http://localhost:8081/frilance/api/v1/users
 {
@@ -103,6 +113,19 @@ GET - http://localhost:8081/frilance/api/v1/tasks/{id}
 GET - http://localhost:8081/frilance/api/v1/tasks?userId={id}
 
 
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=taskStatus)
+GET - http://localhost:8081/frilance/api/v1/tasks/search
+Опционально:
+{
+    "taskStatus": "ON_FIX"
+    "createdAt": "2020-10-30 18:41:36"
+    "minPrice" : "10"
+    "minPrice" : "100"
+    "description": "задание"
+    "taskCompletionDate": "2020-11-20 00:00:00"
+}
+
+
 Создать задание
 POST - http://localhost:8081/frilance/api/v1/tasks
 {
@@ -151,6 +174,15 @@ GET - http://localhost:8081/frilance/api/v1/contracts
 GET - http://localhost:8081/frilance/api/v1/contracts/{id}
 
 
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=taskStatus)
+GET - http://localhost:8081/frilance/api/v1/contracts/search
+Опционально:
+{
+    "contractStatus": "PAID"
+    "createdAt": "2020-10-30 18:41:36"
+}
+
+
 Создать контракт для задания {taskId}
 POST - http://localhost:8081/frilance/api/v1/contracts
 {
@@ -195,6 +227,14 @@ GET - http://localhost:8081/frilance/api/v1/roles/users
 GET - http://localhost:8081/frilance/api/v1/roles/users/{id}
 
 
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=createdAt)
+GET - http://localhost:8081/frilance/api/v1/roles/users/search
+Опционально:
+{
+    "value": "CUSTOMER"
+}
+
+
 Создать роль пользователя. Необходим userId в теле запроса,
 доступно только пользователя с ролью администратора ADMIN
 POST - http://localhost:8081/frilance/api/v1/roles/users
@@ -231,6 +271,15 @@ GET - http://localhost:8081/frilance/api/v1/statuses/users
 
 Получить статус пользователя с {id}
 GET - http://localhost:8081/frilance/api/v1/statuses/users/{id}
+
+
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=createdAt)
+GET - http://localhost:8081/frilance/api/v1/statuses/users/search
+Опционально:
+{
+    "value": "ACTIVE"
+    "description": "актив"
+}
 
 
 Создать статус пользователя. Необходим userId в теле запроса,
@@ -274,6 +323,15 @@ GET - http://localhost:8081/frilance/api/v1/statuses/tasks
 GET - http://localhost:8081/frilance/api/v1/statuses/tasks/{id}
 
 
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=createdAt)
+GET - http://localhost:8081/frilance/api/v1/statuses/tasks/search
+Опционально:
+{
+    "value": "ON_FIX"
+    "description": "испр"
+}
+
+
 Создать статус заданий. Необходим userId в теле запроса,
 доступно только пользователя с ролью администратора ADMIN
 POST - http://localhost:8081/frilance/api/v1/statuses/tasks
@@ -313,6 +371,15 @@ GET - http://localhost:8081/frilance/api/v1/statuses/contracts
 
 Получить статус контракта с {id}
 GET - http://localhost:8081/frilance/api/v1/statuses/contracts/{id}
+
+
+Пагинация + сортировка данных опционально (?page=3&size=5&sort=createdAt)
+GET - http://localhost:8081/frilance/api/v1/statuses/contracts/search
+Опционально:
+{
+    "value": "DONE"
+    "description": "заверш"
+}
 
 
 Создать статус контрактов. Необходим userId в теле запроса,

@@ -2,11 +2,18 @@ package ru.iteco.project.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
 import ru.iteco.project.controller.dto.TaskStatusDtoResponse;
+import ru.iteco.project.controller.searching.PageDto;
+import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.TaskStatusSearchDto;
 import ru.iteco.project.dao.TaskRepository;
 import ru.iteco.project.dao.TaskStatusRepository;
 import ru.iteco.project.dao.UserRepository;
@@ -14,7 +21,9 @@ import ru.iteco.project.domain.Task;
 import ru.iteco.project.domain.TaskStatus;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.TaskStatusDtoEntityMapper;
+import ru.iteco.project.service.specifications.SpecificationSupport;
 
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
@@ -81,8 +90,8 @@ public class TaskStatusServiceImpl implements TaskStatusService {
         TaskStatusDtoResponse taskStatusDtoResponse = new TaskStatusDtoResponse();
         if (operationIsAllow(taskStatusDtoRequest)) {
             TaskStatus newTaskStatus = taskStatusDtoEntityMapper.requestDtoToEntity(taskStatusDtoRequest);
-            taskStatusRepository.save(newTaskStatus);
-            taskStatusDtoResponse = taskStatusDtoEntityMapper.entityToResponseDto(newTaskStatus);
+            TaskStatus save = taskStatusRepository.save(newTaskStatus);
+            taskStatusDtoResponse = taskStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return taskStatusDtoResponse;
     }
@@ -101,8 +110,8 @@ public class TaskStatusServiceImpl implements TaskStatusService {
 
             TaskStatus taskStatus = taskStatusDtoEntityMapper.requestDtoToEntity(taskStatusDtoRequest);
             taskStatus.setId(id);
-            taskStatusRepository.save(taskStatus);
-            taskStatusDtoResponse = taskStatusDtoEntityMapper.entityToResponseDto(taskStatus);
+            TaskStatus save = taskStatusRepository.save(taskStatus);
+            taskStatusDtoResponse = taskStatusDtoEntityMapper.entityToResponseDto(save);
         }
         return taskStatusDtoResponse;
     }
@@ -153,5 +162,46 @@ public class TaskStatusServiceImpl implements TaskStatusService {
             }
         }
         return false;
+    }
+
+
+    public PageDto<TaskStatusDtoResponse> getStatus(SearchDto<TaskStatusSearchDto> searchDto, Pageable pageable) {
+        Page<TaskStatus> page;
+        if ((searchDto != null) && (searchDto.searchData() != null)) {
+            page = taskStatusRepository.findAll(getSpec(searchDto), pageable);
+        } else {
+            page = taskStatusRepository.findAll(pageable);
+        }
+
+        List<TaskStatusDtoResponse> TaskStatusDtoResponses = page.map(taskStatusDtoEntityMapper::entityToResponseDto).toList();
+        return new PageDto<>(TaskStatusDtoResponses, page.getTotalElements(), page.getTotalPages());
+
+    }
+
+    /**
+     * Метод получения спецификации для поиска
+     *
+     * @param searchDto - объект dto с данными для поиска
+     * @return - объект спецификации для поиска данных
+     */
+    private Specification<TaskStatus> getSpec(SearchDto<TaskStatusSearchDto> searchDto) {
+        SpecificationSupport<TaskStatus> specSupport = new SpecificationSupport<>();
+        return (root, query, builder) -> {
+
+            TaskStatusSearchDto TaskStatusSearchDto = searchDto.searchData();
+            ArrayList<Predicate> predicates = new ArrayList<>();
+
+            if (!ObjectUtils.isEmpty(TaskStatusSearchDto.getValue())) {
+                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "value"),
+                        TaskStatusSearchDto.getValue()));
+            }
+
+            if (!ObjectUtils.isEmpty(TaskStatusSearchDto.getDescription())) {
+                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
+                        TaskStatusSearchDto.getDescription()));
+            }
+
+            return builder.or(predicates.toArray(new Predicate[]{}));
+        };
     }
 }
