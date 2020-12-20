@@ -3,54 +3,54 @@ package ru.iteco.project.controller.searching;
 /**
  * Класс - dto для поиска статусов заданий с переданными ограничениями по полям
  */
-public class TaskStatusSearchDto implements SearchDto<TaskStatusSearchDto> {
+public class TaskStatusSearchDto extends AbstractSearchDto {
 
     /*** Наименование статуса задания */
-    private String value;
+    private SearchUnit value;
 
     /*** Описание статуса задания */
-    private String description;
+    private SearchUnit description;
 
     /*** Дата и время создания статуса задания */
-    private String createdAt;
+    private SearchUnit createdAt;
 
     /*** Дата и время последнего обновления статуса задания */
-    private String updatedAt;
+    private SearchUnit updatedAt;
 
 
     public TaskStatusSearchDto() {
     }
 
-    public String getValue() {
+    public SearchUnit getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(SearchUnit value) {
         this.value = value;
     }
 
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getDescription() {
+    public SearchUnit getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(SearchUnit description) {
         this.description = description;
+    }
+
+    public SearchUnit getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(SearchUnit createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public SearchUnit getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(SearchUnit updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @Override

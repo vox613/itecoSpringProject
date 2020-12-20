@@ -4,30 +4,30 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.ContractStatusDtoRequest;
 import ru.iteco.project.controller.dto.ContractStatusDtoResponse;
 import ru.iteco.project.controller.searching.ContractStatusSearchDto;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
-import ru.iteco.project.dao.ContractRepository;
-import ru.iteco.project.dao.ContractStatusRepository;
-import ru.iteco.project.dao.UserRepository;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.ContractStatus;
 import ru.iteco.project.domain.User;
+import ru.iteco.project.repository.ContractRepository;
+import ru.iteco.project.repository.ContractStatusRepository;
+import ru.iteco.project.repository.UserRepository;
 import ru.iteco.project.service.mappers.ContractStatusDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
-import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 /**
  * Класс реализует функционал сервисного слоя для работы со статусами контрактов
@@ -52,16 +52,20 @@ public class ContractStatusServiceImpl implements ContractStatusService {
     /*** Объект маппера dto статуса контракта в сущность статуса контракта */
     private final ContractStatusDtoEntityMapper contractStatusDtoEntityMapper;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<ContractStatus> specificationBuilder;
+
 
     public ContractStatusServiceImpl(ContractStatusRepository contractStatusRepository, ContractRepository contractRepository,
                                      UserRepository userRepository, ContractService contractService,
-                                     ContractStatusDtoEntityMapper contractStatusDtoEntityMapper) {
+                                     ContractStatusDtoEntityMapper contractStatusDtoEntityMapper, SpecificationBuilder<ContractStatus> specificationBuilder) {
 
         this.contractStatusRepository = contractStatusRepository;
         this.contractRepository = contractRepository;
         this.userRepository = userRepository;
         this.contractService = contractService;
         this.contractStatusDtoEntityMapper = contractStatusDtoEntityMapper;
+        this.specificationBuilder = specificationBuilder;
     }
 
 
@@ -167,7 +171,7 @@ public class ContractStatusServiceImpl implements ContractStatusService {
     public PageDto<ContractStatusDtoResponse> getStatus(SearchDto<ContractStatusSearchDto> searchDto, Pageable pageable) {
         Page<ContractStatus> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = contractStatusRepository.findAll(getSpec(searchDto), pageable);
+            page = contractStatusRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = contractStatusRepository.findAll(pageable);
         }
@@ -177,30 +181,48 @@ public class ContractStatusServiceImpl implements ContractStatusService {
 
     }
 
+
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<ContractStatus> getSpec(SearchDto<ContractStatusSearchDto> searchDto) {
-        SpecificationSupport<ContractStatus> specSupport = new SpecificationSupport<>();
-        return (root, query, builder) -> {
+    private CriteriaObject prepareCriteriaObject(SearchDto<ContractStatusSearchDto> searchDto) {
+        ContractStatusSearchDto contractStatusSearchDto = searchDto.searchData();
+        return new CriteriaObject(contractStatusSearchDto.getJoinOperation(), prepareRestrictionValues(contractStatusSearchDto));
+    }
 
-            ContractStatusSearchDto ContractStatusSearchDto = searchDto.searchData();
-            ArrayList<Predicate> predicates = new ArrayList<>();
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param contractStatusSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(ContractStatusSearchDto contractStatusSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
 
-            if (!ObjectUtils.isEmpty(ContractStatusSearchDto.getValue())) {
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "value"),
-                        ContractStatusSearchDto.getValue()));
-            }
+        SearchUnit value = contractStatusSearchDto.getValue();
+        if (searchUnitIsValid(value)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "value",
+                            value.getSearchOperation(),
+                            value.getValue()
+                    )
+            );
+        }
 
-            if (!ObjectUtils.isEmpty(ContractStatusSearchDto.getDescription())) {
-                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
-                        ContractStatusSearchDto.getDescription()));
-            }
-
-            return builder.or(predicates.toArray(new Predicate[]{}));
-        };
+        SearchUnit description = contractStatusSearchDto.getDescription();
+        if (searchUnitIsValid(description)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "description",
+                            description.getValue(),
+                            description.getSearchOperation()
+                    )
+            );
+        }
+        return restrictionValues;
     }
 }

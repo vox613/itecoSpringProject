@@ -3,45 +3,44 @@ package ru.iteco.project.controller.searching;
 /**
  * Класс - dto для поиска ролей пользователей с переданными ограничениями по полям
  */
-public class UserRoleSearchDto implements SearchDto<UserRoleSearchDto> {
+public class UserRoleSearchDto extends AbstractSearchDto {
 
     /*** Наименование роли пользователя */
-    private String value;
+    private SearchUnit value;
 
     /*** Дата и время создания роли пользователя */
-    private String createdAt;
+    private SearchUnit createdAt;
 
     /*** Дата и время последнего обновления роли пользователя */
-    private String updatedAt;
+    private SearchUnit updatedAt;
 
 
     public UserRoleSearchDto() {
     }
 
-    public String getValue() {
+    public SearchUnit getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(SearchUnit value) {
         this.value = value;
     }
 
-    public String getCreatedAt() {
+    public SearchUnit getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(SearchUnit createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public SearchUnit getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(SearchUnit updatedAt) {
         this.updatedAt = updatedAt;
     }
-
 
     @Override
     public UserRoleSearchDto searchData() {

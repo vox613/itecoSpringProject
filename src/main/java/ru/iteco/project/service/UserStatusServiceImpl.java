@@ -4,28 +4,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserStatusDtoRequest;
 import ru.iteco.project.controller.dto.UserStatusDtoResponse;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.controller.searching.UserStatusSearchDto;
-import ru.iteco.project.dao.UserRepository;
-import ru.iteco.project.dao.UserStatusRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserStatus;
+import ru.iteco.project.repository.UserRepository;
+import ru.iteco.project.repository.UserStatusRepository;
 import ru.iteco.project.service.mappers.UserStatusDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
-import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 
 /**
@@ -48,13 +48,18 @@ public class UserStatusServiceImpl implements UserStatusService {
     /*** Объект маппера dto статуса пользователя в сущность статуса пользователя */
     private final UserStatusDtoEntityMapper userStatusDtoEntityMapper;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<UserStatus> specificationBuilder;
+
 
     public UserStatusServiceImpl(UserStatusRepository userStatusRepository, UserRepository userRepository,
-                                 UserService userService, UserStatusDtoEntityMapper userStatusDtoEntityMapper) {
+                                 UserService userService, UserStatusDtoEntityMapper userStatusDtoEntityMapper,
+                                 SpecificationBuilder<UserStatus> specificationBuilder) {
         this.userStatusRepository = userStatusRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.userStatusDtoEntityMapper = userStatusDtoEntityMapper;
+        this.specificationBuilder = specificationBuilder;
     }
 
 
@@ -164,40 +169,57 @@ public class UserStatusServiceImpl implements UserStatusService {
     public PageDto<UserStatusDtoResponse> getStatus(SearchDto<UserStatusSearchDto> searchDto, Pageable pageable) {
         Page<UserStatus> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = userStatusRepository.findAll(getSpec(searchDto), pageable);
+            page = userStatusRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = userStatusRepository.findAll(pageable);
         }
-
         List<UserStatusDtoResponse> userStatusDtoResponses = page.map(userStatusDtoEntityMapper::entityToResponseDto).toList();
         return new PageDto<>(userStatusDtoResponses, page.getTotalElements(), page.getTotalPages());
 
     }
 
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<UserStatus> getSpec(SearchDto<UserStatusSearchDto> searchDto) {
-        SpecificationSupport<UserStatus> specSupport = new SpecificationSupport<>();
+    private CriteriaObject prepareCriteriaObject(SearchDto<UserStatusSearchDto> searchDto) {
+        UserStatusSearchDto userStatusSearchDto = searchDto.searchData();
+        return new CriteriaObject(userStatusSearchDto.getJoinOperation(), prepareRestrictionValues(userStatusSearchDto));
+    }
 
-        return (root, query, builder) -> {
-            UserStatusSearchDto userStatusSearchDto = searchDto.searchData();
-            ArrayList<Predicate> predicates = new ArrayList<>();
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param statusSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(UserStatusSearchDto statusSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
 
-            if (!ObjectUtils.isEmpty(userStatusSearchDto.getValue())) {
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "value"),
-                        userStatusSearchDto.getValue()));
-            }
+        SearchUnit value = statusSearchDto.getValue();
+        if (searchUnitIsValid(value)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "value",
+                            value.getSearchOperation(),
+                            value.getValue()
+                    )
+            );
+        }
 
-            if (!ObjectUtils.isEmpty(userStatusSearchDto.getDescription())) {
-                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
-                        userStatusSearchDto.getDescription()));
-            }
-            return builder.or(predicates.toArray(new Predicate[]{}));
-        };
+        SearchUnit description = statusSearchDto.getDescription();
+        if (searchUnitIsValid(description)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "description",
+                            description.getValue(),
+                            description.getSearchOperation()
+                    )
+            );
+        }
+        return restrictionValues;
     }
 
 }

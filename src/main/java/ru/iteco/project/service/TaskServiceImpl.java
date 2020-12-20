@@ -6,30 +6,31 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.controller.searching.TaskSearchDto;
-import ru.iteco.project.dao.ContractRepository;
-import ru.iteco.project.dao.TaskRepository;
-import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.Task;
 import ru.iteco.project.domain.TaskStatus;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.exception.InvalidTaskStatusException;
 import ru.iteco.project.exception.UnavailableRoleOperationException;
+import ru.iteco.project.repository.ContractRepository;
+import ru.iteco.project.repository.TaskRepository;
+import ru.iteco.project.repository.UserRepository;
 import ru.iteco.project.service.mappers.TaskDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
-import javax.persistence.criteria.Predicate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,8 @@ import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.*;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.EXECUTOR;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
 import static ru.iteco.project.domain.UserStatus.UserStatusEnum.*;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.isBetweenOperation;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с заданиями
@@ -65,14 +68,18 @@ public class TaskServiceImpl implements TaskService {
     /*** Объект маппера dto пользователя в сущность пользователя */
     private final UserDtoEntityMapper userMapper;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<Task> specificationBuilder;
+
 
     public TaskServiceImpl(TaskRepository taskRepository, UserRepository userRepository, ContractRepository contractRepository,
-                           TaskDtoEntityMapper taskMapper, UserDtoEntityMapper userMapper) {
+                           TaskDtoEntityMapper taskMapper, UserDtoEntityMapper userMapper, SpecificationBuilder<Task> specificationBuilder) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.contractRepository = contractRepository;
         this.taskMapper = taskMapper;
         this.userMapper = userMapper;
+        this.specificationBuilder = specificationBuilder;
     }
 
 
@@ -245,7 +252,7 @@ public class TaskServiceImpl implements TaskService {
     public PageDto<TaskDtoResponse> getTasks(SearchDto<TaskSearchDto> searchDto, Pageable pageable) {
         Page<Task> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = taskRepository.findAll(getSpec(searchDto), pageable);
+            page = taskRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = taskRepository.findAll(pageable);
         }
@@ -256,47 +263,124 @@ public class TaskServiceImpl implements TaskService {
     }
 
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<Task> getSpec(SearchDto<TaskSearchDto> searchDto) {
-        SpecificationSupport<Task> specSupport = new SpecificationSupport<>();
-        return (root, query, builder) -> {
+    private CriteriaObject prepareCriteriaObject(SearchDto<TaskSearchDto> searchDto) {
+        TaskSearchDto taskSearchDto = searchDto.searchData();
+        return new CriteriaObject(taskSearchDto.getJoinOperation(), prepareRestrictionValues(taskSearchDto));
+    }
 
-            TaskSearchDto taskSearchDto = searchDto.searchData();
-            ArrayList<Predicate> predicates = new ArrayList<>();
 
-            if (!ObjectUtils.isEmpty(taskSearchDto.getTaskStatus())) {
-                TaskStatus taskStatus = taskMapper.getTaskStatusRepository()
-                        .findTaskStatusByValue(taskSearchDto.getTaskStatus())
-                        .orElseThrow(InvalidTaskStatusException::new);
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param taskSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(TaskSearchDto taskSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
 
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "taskStatus"), taskStatus));
+        SearchUnit taskSearchStatus = taskSearchDto.getTaskStatus();
+        if (searchUnitIsValid(taskSearchStatus)) {
+            TaskStatus taskStatus = taskMapper.getTaskStatusRepository()
+                    .findTaskStatusByValue(taskSearchStatus.getValue())
+                    .orElseThrow(InvalidTaskStatusException::new);
+
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<TaskStatus>(
+                            "taskStatus",
+                            taskSearchStatus.getSearchOperation(),
+                            taskStatus
+                    )
+            );
+        }
+
+        SearchUnit createdAt = taskSearchDto.getCreatedAt();
+        if (searchUnitIsValid(createdAt)) {
+            if (isBetweenOperation(createdAt)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getSearchOperation(),
+                                createdAt.getValue(),
+                                createdAt.getMinValue(),
+                                createdAt.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getValue(),
+                                createdAt.getSearchOperation()
+                        )
+                );
             }
+        }
 
-            if (!ObjectUtils.isEmpty(taskSearchDto.getCreatedAt())) {
-                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "createdAt"),
-                        taskSearchDto.getCreatedAt()));
+
+        SearchUnit price = taskSearchDto.getPrice();
+        if (searchUnitIsValid(price)) {
+            if (isBetweenOperation(price)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<BigDecimal>(
+                                "price",
+                                price.getSearchOperation(),
+                                price.getValue(),
+                                price.getMinValue(),
+                                price.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<BigDecimal>(
+                                "price",
+                                price.getValue(),
+                                price.getSearchOperation()
+                        )
+                );
             }
+        }
 
-            if (!ObjectUtils.isEmpty(taskSearchDto.getMinPrice()) && !ObjectUtils.isEmpty(taskSearchDto.getMaxPrice())) {
-                predicates.add(specSupport.getBetweenPredicate(builder, specSupport.getPath(root, "price"),
-                        taskSearchDto.getMinPrice(), taskSearchDto.getMaxPrice()));
+
+        SearchUnit description = taskSearchDto.getDescription();
+        if (searchUnitIsValid(description)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "description",
+                            description.getValue(),
+                            description.getSearchOperation()
+                    )
+            );
+        }
+
+
+        SearchUnit taskCompletionDate = taskSearchDto.getTaskCompletionDate();
+        if (searchUnitIsValid(taskCompletionDate)) {
+            if (isBetweenOperation(taskCompletionDate)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "taskCompletionDate",
+                                taskCompletionDate.getSearchOperation(),
+                                taskCompletionDate.getValue(),
+                                taskCompletionDate.getMinValue(),
+                                taskCompletionDate.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "taskCompletionDate",
+                                taskCompletionDate.getValue(),
+                                taskCompletionDate.getSearchOperation()
+                        )
+                );
             }
+        }
 
-            if (!ObjectUtils.isEmpty(taskSearchDto.getDescription())) {
-                predicates.add(specSupport.getLikePredicate(builder, specSupport.getPath(root, "description"),
-                        taskSearchDto.getDescription()));
-            }
-
-            if (!ObjectUtils.isEmpty(taskSearchDto.getTaskCompletionDate())) {
-                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "taskCompletionDate"),
-                        taskSearchDto.getTaskCompletionDate()));
-            }
-
-            return builder.or(predicates.toArray(new Predicate[]{}));
-        };
+        return restrictionValues;
     }
 }

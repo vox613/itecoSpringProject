@@ -4,27 +4,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserRoleDtoRequest;
 import ru.iteco.project.controller.dto.UserRoleDtoResponse;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.controller.searching.UserRoleSearchDto;
-import ru.iteco.project.dao.UserRepository;
-import ru.iteco.project.dao.UserRoleRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserRole;
+import ru.iteco.project.repository.UserRepository;
+import ru.iteco.project.repository.UserRoleRepository;
 import ru.iteco.project.service.mappers.UserRoleDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
 import java.util.*;
 
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 
 /**
@@ -47,14 +48,17 @@ public class UserRoleServiceImpl implements UserRoleService {
     /*** Объект маппера dto роли пользователя в сущность роли пользователя */
     private final UserRoleDtoEntityMapper userRoleDtoEntityMapper;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<UserRole> specificationBuilder;
 
     public UserRoleServiceImpl(UserRoleRepository userRoleRepository, UserRepository userRepository, UserService userService,
-                               UserRoleDtoEntityMapper userRoleDtoEntityMapper) {
+                               UserRoleDtoEntityMapper userRoleDtoEntityMapper, SpecificationBuilder<UserRole> specificationBuilder) {
 
         this.userRoleRepository = userRoleRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.userRoleDtoEntityMapper = userRoleDtoEntityMapper;
+        this.specificationBuilder = specificationBuilder;
     }
 
 
@@ -167,7 +171,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     public PageDto<UserRoleDtoResponse> getRoles(SearchDto<UserRoleSearchDto> searchDto, Pageable pageable) {
         Page<UserRole> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = userRoleRepository.findAll(getSpec(searchDto), pageable);
+            page = userRoleRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = userRoleRepository.findAll(pageable);
         }
@@ -178,22 +182,36 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<UserRole> getSpec(SearchDto<UserRoleSearchDto> searchDto) {
-        SpecificationSupport<UserRole> specSupport = new SpecificationSupport<>();
-        return (root, query, builder) -> {
+    private CriteriaObject prepareCriteriaObject(SearchDto<UserRoleSearchDto> searchDto) {
+        UserRoleSearchDto userRoleSearchDto = searchDto.searchData();
+        return new CriteriaObject(userRoleSearchDto.getJoinOperation(), prepareRestrictionValues(userRoleSearchDto));
+    }
 
-            UserRoleSearchDto userRoleSearchDto = searchDto.searchData();
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param userRoleSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(UserRoleSearchDto userRoleSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
 
-            if (!ObjectUtils.isEmpty(userRoleSearchDto.getValue())) {
-                return builder.equal(specSupport.getPath(root, "value"), userRoleSearchDto.getValue());
-            }
-            return builder.and();
-        };
+        SearchUnit value = userRoleSearchDto.getValue();
+        if (searchUnitIsValid(value)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "value",
+                            value.getSearchOperation(),
+                            value.getValue()
+                    )
+            );
+        }
+        return restrictionValues;
     }
 
 }
