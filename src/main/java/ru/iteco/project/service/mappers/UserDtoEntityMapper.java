@@ -5,13 +5,13 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
-import ru.iteco.project.dao.TaskRepository;
-import ru.iteco.project.dao.UserRoleRepository;
-import ru.iteco.project.dao.UserStatusRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserStatus;
 import ru.iteco.project.exception.InvalidUserRoleException;
 import ru.iteco.project.exception.InvalidUserStatusException;
+import ru.iteco.project.repository.TaskRepository;
+import ru.iteco.project.repository.UserRoleRepository;
+import ru.iteco.project.repository.UserStatusRepository;
 
 import java.util.Optional;
 import java.util.UUID;

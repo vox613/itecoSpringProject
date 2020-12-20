@@ -1,136 +1,133 @@
 package ru.iteco.project.controller.searching;
 
 
-import java.math.BigDecimal;
-
 /**
  * Класс - dto для поиска пользователей с переданными ограничениями по полям
  */
-public class UserSearchDto implements SearchDto<UserSearchDto> {
+public class UserSearchDto extends AbstractSearchDto {
 
     /*** Имя пользователя */
-    private String firstName;
+    private SearchUnit firstName;
 
     /*** Фамилия пользователя */
-    private String secondName;
+    private SearchUnit secondName;
 
     /*** Отчество пользователя */
-    private String lastName;
+    private SearchUnit lastName;
 
     /*** Логин пользователя */
-    private String login;
+    private SearchUnit login;
 
     /*** Email пользователя */
-    private String email;
+    private SearchUnit email;
 
     /*** Номер телефона пользователя */
-    private String phoneNumber;
+    private SearchUnit phoneNumber;
 
     /*** Роль пользователя */
-    private String role;
+    private SearchUnit role;
 
     /*** Статус пользователя */
-    private String userStatus;
+    private SearchUnit userStatus;
 
     /*** Кошелек пользователя */
-    private BigDecimal wallet;
+    private SearchUnit wallet;
 
     /*** Дата и время создания пользователя */
-    private String createdAt;
+    private SearchUnit createdAt;
 
     /*** Дата и время последнего обновления пользователя */
-    private String updatedAt;
+    private SearchUnit updatedAt;
 
 
     public UserSearchDto() {
     }
 
-
-    public String getFirstName() {
+    public SearchUnit getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
+    public void setFirstName(SearchUnit firstName) {
         this.firstName = firstName;
     }
 
-    public String getSecondName() {
+    public SearchUnit getSecondName() {
         return secondName;
     }
 
-    public void setSecondName(String secondName) {
+    public void setSecondName(SearchUnit secondName) {
         this.secondName = secondName;
     }
 
-    public String getLastName() {
+    public SearchUnit getLastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
+    public void setLastName(SearchUnit lastName) {
         this.lastName = lastName;
     }
 
-    public String getLogin() {
+    public SearchUnit getLogin() {
         return login;
     }
 
-    public void setLogin(String login) {
+    public void setLogin(SearchUnit login) {
         this.login = login;
     }
 
-    public String getEmail() {
+    public SearchUnit getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void setEmail(SearchUnit email) {
         this.email = email;
     }
 
-    public String getPhoneNumber() {
+    public SearchUnit getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
+    public void setPhoneNumber(SearchUnit phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getRole() {
+    public SearchUnit getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(SearchUnit role) {
         this.role = role;
     }
 
-    public String getUserStatus() {
+    public SearchUnit getUserStatus() {
         return userStatus;
     }
 
-    public void setUserStatus(String userStatus) {
+    public void setUserStatus(SearchUnit userStatus) {
         this.userStatus = userStatus;
     }
 
-    public BigDecimal getWallet() {
+    public SearchUnit getWallet() {
         return wallet;
     }
 
-    public void setWallet(BigDecimal wallet) {
+    public void setWallet(SearchUnit wallet) {
         this.wallet = wallet;
     }
 
-    public String getCreatedAt() {
+    public SearchUnit getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(SearchUnit createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public SearchUnit getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(SearchUnit updatedAt) {
         this.updatedAt = updatedAt;
     }
 

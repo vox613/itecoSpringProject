@@ -4,32 +4,35 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.controller.searching.UserSearchDto;
-import ru.iteco.project.dao.TaskRepository;
-import ru.iteco.project.dao.UserRepository;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.domain.UserRole;
 import ru.iteco.project.domain.UserStatus;
 import ru.iteco.project.exception.InvalidUserRoleException;
 import ru.iteco.project.exception.InvalidUserStatusException;
+import ru.iteco.project.repository.TaskRepository;
+import ru.iteco.project.repository.UserRepository;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
-import javax.persistence.criteria.Predicate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.iteco.project.domain.UserStatus.UserStatusEnum.CREATED;
 import static ru.iteco.project.domain.UserStatus.UserStatusEnum.isEqualsUserStatus;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.isBetweenOperation;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с пользователями
@@ -51,12 +54,16 @@ public class UserServiceImpl implements UserService {
     /*** Объект маппера dto пользователя в сущность пользователя */
     private final UserDtoEntityMapper userMapper;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<User> specificationBuilder;
 
-    public UserServiceImpl(UserRepository userRepository, TaskRepository taskRepository, TaskService taskService, UserDtoEntityMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, TaskRepository taskRepository, TaskService taskService,
+                           UserDtoEntityMapper userMapper, SpecificationBuilder<User> specificationBuilder) {
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
         this.taskService = taskService;
         this.userMapper = userMapper;
+        this.specificationBuilder = specificationBuilder;
     }
 
     /**
@@ -173,7 +180,7 @@ public class UserServiceImpl implements UserService {
     public PageDto<UserDtoResponse> getUsers(SearchDto<UserSearchDto> searchDto, Pageable pageable) {
         Page<User> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = userRepository.findAll(getSpec(searchDto), pageable);
+            page = userRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = userRepository.findAll(pageable);
         }
@@ -183,37 +190,113 @@ public class UserServiceImpl implements UserService {
 
     }
 
-
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<User> getSpec(SearchDto<UserSearchDto> searchDto) {
-        SpecificationSupport<User> specSupport = new SpecificationSupport<>();
-        return (root, query, builder) -> {
-
-            UserSearchDto userSearchDto = searchDto.searchData();
-            ArrayList<Predicate> predicates = new ArrayList<>();
-
-            if (!ObjectUtils.isEmpty(userSearchDto.getRole())) {
-                UserRole userRole = userMapper.getUserRoleRepository()
-                        .findUserRoleByValue(userSearchDto.getRole())
-                        .orElseThrow(InvalidUserRoleException::new);
-
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "role"), userRole));
-            }
-
-            if (!ObjectUtils.isEmpty(userSearchDto.getUserStatus())) {
-                UserStatus userStatus = userMapper.getUserStatusRepository()
-                        .findUserStatusByValue(userSearchDto.getUserStatus())
-                        .orElseThrow(InvalidUserStatusException::new);
-
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "userStatus"), userStatus));
-            }
-            return builder.and(predicates.toArray(new Predicate[]{}));
-        };
+    private CriteriaObject prepareCriteriaObject(SearchDto<UserSearchDto> searchDto) {
+        UserSearchDto userSearchDto = searchDto.searchData();
+        return new CriteriaObject(userSearchDto.getJoinOperation(), prepareRestrictionValues(userSearchDto));
     }
 
+
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param userSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(UserSearchDto userSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
+
+        SearchUnit role = userSearchDto.getRole();
+        if (searchUnitIsValid(role)) {
+            UserRole userRole = userMapper.getUserRoleRepository()
+                    .findUserRoleByValue(role.getValue())
+                    .orElseThrow(InvalidUserRoleException::new);
+
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<UserRole>(
+                            "role",
+                            role.getSearchOperation(),
+                            userRole
+                    )
+            );
+        }
+
+        SearchUnit searchUserStatus = userSearchDto.getUserStatus();
+        if (searchUnitIsValid(searchUserStatus)) {
+            UserStatus userStatus = userMapper.getUserStatusRepository()
+                    .findUserStatusByValue(searchUserStatus.getValue())
+                    .orElseThrow(InvalidUserStatusException::new);
+
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<UserStatus>(
+                            "userStatus",
+                            searchUserStatus.getSearchOperation(),
+                            userStatus
+                    )
+            );
+        }
+
+        SearchUnit secondName = userSearchDto.getSecondName();
+        if (searchUnitIsValid(secondName)) {
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<String>(
+                            "secondName",
+                            secondName.getValue(),
+                            secondName.getSearchOperation()
+                    )
+            );
+        }
+
+        SearchUnit wallet = userSearchDto.getWallet();
+        if (searchUnitIsValid(wallet)) {
+            if (isBetweenOperation(wallet)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<BigDecimal>(
+                                "wallet",
+                                wallet.getSearchOperation(),
+                                wallet.getValue(),
+                                wallet.getMinValue(),
+                                wallet.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<BigDecimal>(
+                                "wallet",
+                                wallet.getValue(),
+                                wallet.getSearchOperation()
+                        )
+                );
+            }
+        }
+
+        SearchUnit createdAt = userSearchDto.getCreatedAt();
+        if (searchUnitIsValid(createdAt)) {
+            if (isBetweenOperation(createdAt)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getSearchOperation(),
+                                createdAt.getValue(),
+                                createdAt.getMinValue(),
+                                createdAt.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getValue(),
+                                createdAt.getSearchOperation()
+                        )
+                );
+            }
+        }
+        return restrictionValues;
+    }
 }

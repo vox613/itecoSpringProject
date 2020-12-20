@@ -4,30 +4,30 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
 import ru.iteco.project.controller.searching.ContractSearchDto;
 import ru.iteco.project.controller.searching.PageDto;
 import ru.iteco.project.controller.searching.SearchDto;
-import ru.iteco.project.dao.ContractRepository;
-import ru.iteco.project.dao.TaskRepository;
-import ru.iteco.project.dao.UserRepository;
+import ru.iteco.project.controller.searching.SearchUnit;
 import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.ContractStatus;
 import ru.iteco.project.domain.Task;
 import ru.iteco.project.domain.User;
 import ru.iteco.project.exception.InvalidContractStatusException;
+import ru.iteco.project.repository.ContractRepository;
+import ru.iteco.project.repository.TaskRepository;
+import ru.iteco.project.repository.UserRepository;
 import ru.iteco.project.service.mappers.ContractDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
-import ru.iteco.project.service.specifications.SpecificationSupport;
+import ru.iteco.project.service.specifications.CriteriaObject;
+import ru.iteco.project.service.specifications.SpecificationBuilder;
 
-import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static ru.iteco.project.domain.ContractStatus.ContractStatusEnum.*;
@@ -36,6 +36,8 @@ import static ru.iteco.project.domain.TaskStatus.TaskStatusEnum.*;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.EXECUTOR;
 import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
 import static ru.iteco.project.domain.UserStatus.UserStatusEnum.*;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.isBetweenOperation;
+import static ru.iteco.project.service.specifications.SpecificationBuilder.searchUnitIsValid;
 
 
 /**
@@ -64,15 +66,19 @@ public class ContractServiceImpl implements ContractService {
     /*** Объект сервисного слоя заданий */
     private final TaskService taskService;
 
+    /*** Сервис для формирования спецификации поиска данных */
+    private final SpecificationBuilder<Contract> specificationBuilder;
+
 
     public ContractServiceImpl(ContractRepository contractRepository, UserRepository userRepository, TaskRepository taskRepository,
-                               ContractDtoEntityMapper contractMapper, UserDtoEntityMapper userDtoEntityMapper, TaskService taskService) {
+                               ContractDtoEntityMapper contractMapper, UserDtoEntityMapper userDtoEntityMapper, TaskService taskService, SpecificationBuilder<Contract> specificationBuilder) {
         this.contractRepository = contractRepository;
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
         this.contractDtoEntityMapper = contractMapper;
         this.userDtoEntityMapper = userDtoEntityMapper;
         this.taskService = taskService;
+        this.specificationBuilder = specificationBuilder;
     }
 
     /**
@@ -269,7 +275,7 @@ public class ContractServiceImpl implements ContractService {
     public PageDto<ContractDtoResponse> getContracts(SearchDto<ContractSearchDto> searchDto, Pageable pageable) {
         Page<Contract> page;
         if ((searchDto != null) && (searchDto.searchData() != null)) {
-            page = contractRepository.findAll(getSpec(searchDto), pageable);
+            page = contractRepository.findAll(specificationBuilder.getSpec(prepareCriteriaObject(searchDto)), pageable);
         } else {
             page = contractRepository.findAll(pageable);
         }
@@ -280,32 +286,64 @@ public class ContractServiceImpl implements ContractService {
     }
 
     /**
-     * Метод получения спецификации для поиска
+     * Метод наполняет CriteriaObject данными поиска из searchDto
      *
-     * @param searchDto - объект dto с данными для поиска
-     * @return - объект спецификации для поиска данных
+     * @param searchDto - модель с данными для поиска
+     * @return - CriteriaObject - конейнер со всеми данными и ограничениями для поиска
      */
-    private Specification<Contract> getSpec(SearchDto<ContractSearchDto> searchDto) {
-        SpecificationSupport<Contract> specSupport = new SpecificationSupport<>();
-        return (root, query, builder) -> {
+    private CriteriaObject prepareCriteriaObject(SearchDto<ContractSearchDto> searchDto) {
+        ContractSearchDto contractSearchDto = searchDto.searchData();
+        return new CriteriaObject(contractSearchDto.getJoinOperation(), prepareRestrictionValues(contractSearchDto));
+    }
 
-            ContractSearchDto contractSearchDto = searchDto.searchData();
-            ArrayList<Predicate> predicates = new ArrayList<>();
 
-            if (!ObjectUtils.isEmpty(contractSearchDto.getContractStatus())) {
-                ContractStatus contractStatus = contractDtoEntityMapper.getContractStatusRepository()
-                        .findContractStatusByValue(contractSearchDto.getContractStatus())
-                        .orElseThrow(InvalidContractStatusException::new);
+    /**
+     * Метод подготавливает ограничения для полей поиска
+     *
+     * @param contractSearchDto - модель с данными для поиска
+     * @return - мписок ограничений для всех полей по которым осуществляется поиск
+     */
+    private List<CriteriaObject.RestrictionValues> prepareRestrictionValues(ContractSearchDto contractSearchDto) {
+        ArrayList<CriteriaObject.RestrictionValues> restrictionValues = new ArrayList<>();
 
-                predicates.add(specSupport.getEqualsPredicate(builder, specSupport.getPath(root, "contractStatus"), contractStatus));
+        SearchUnit contractSearchStatus = contractSearchDto.getContractStatus();
+        if (searchUnitIsValid(contractSearchStatus)) {
+            ContractStatus contractStatus = contractDtoEntityMapper.getContractStatusRepository()
+                    .findContractStatusByValue(contractSearchStatus.getValue())
+                    .orElseThrow(InvalidContractStatusException::new);
+
+            restrictionValues.add(
+                    new CriteriaObject.RestrictionValues<ContractStatus>(
+                            "contractStatus",
+                            contractSearchStatus.getSearchOperation(),
+                            contractStatus
+                    )
+            );
+        }
+
+        SearchUnit createdAt = contractSearchDto.getCreatedAt();
+        if (searchUnitIsValid(createdAt)) {
+            if (isBetweenOperation(createdAt)) {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getSearchOperation(),
+                                createdAt.getValue(),
+                                createdAt.getMinValue(),
+                                createdAt.getMaxValue()
+                        )
+                );
+            } else {
+                restrictionValues.add(
+                        new CriteriaObject.RestrictionValues<LocalDateTime>(
+                                "createdAt",
+                                createdAt.getValue(),
+                                createdAt.getSearchOperation()
+                        )
+                );
             }
+        }
 
-            if (!ObjectUtils.isEmpty(contractSearchDto.getCreatedAt())) {
-                predicates.add(specSupport.getGreaterThanOrEqualToPredicate(builder, specSupport.getPath(root, "createdAt"),
-                        contractSearchDto.getCreatedAt()));
-            }
-
-            return builder.and(predicates.toArray(new Predicate[]{}));
-        };
+        return restrictionValues;
     }
 }

@@ -3,43 +3,43 @@ package ru.iteco.project.controller.searching;
 /**
  * Класс - dto для поиска контрактов с переданными ограничениями по полям
  */
-public class ContractSearchDto implements SearchDto<ContractSearchDto> {
+public class ContractSearchDto extends AbstractSearchDto {
 
-    /*** Статус договора */
-    private String contractStatus;
+    /*** Статус контракта */
+    private SearchUnit contractStatus;
 
-    /*** Дата и время создания пользователя */
-    private String createdAt;
+    /*** Дата и время создания контракта */
+    private SearchUnit createdAt;
 
-    /*** Дата и время последнего обновления пользователя */
-    private String updatedAt;
+    /*** Дата и время последнего обновления контракта */
+    private SearchUnit updatedAt;
 
 
     public ContractSearchDto() {
     }
 
 
-    public String getContractStatus() {
+    public SearchUnit getContractStatus() {
         return contractStatus;
     }
 
-    public void setContractStatus(String contractStatus) {
+    public void setContractStatus(SearchUnit contractStatus) {
         this.contractStatus = contractStatus;
     }
 
-    public String getCreatedAt() {
+    public SearchUnit getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(SearchUnit createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public SearchUnit getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(SearchUnit updatedAt) {
         this.updatedAt = updatedAt;
     }
 

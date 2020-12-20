@@ -4,12 +4,20 @@ package ru.iteco.project.controller.searching;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Модель страницы-ответа на запрос поиска с пагинацией/сортировкой
+ *
+ * @param <T> - тип данных поиск которых осуществляется
+ */
 public class PageDto<T> implements Serializable {
 
+    /*** Список результатов поиска*/
     private List<T> data;
 
+    /*** Общее количество результатов удовлетворяющих критериям поиска*/
     private long totalElements;
 
+    /*** Общее количество страниц для отображения результатов текущего поиска*/
     private long totalPages;
 
 

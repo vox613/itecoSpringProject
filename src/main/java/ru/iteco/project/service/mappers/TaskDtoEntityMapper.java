@@ -5,9 +5,9 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
-import ru.iteco.project.dao.TaskStatusRepository;
 import ru.iteco.project.domain.Task;
 import ru.iteco.project.exception.InvalidTaskStatusException;
+import ru.iteco.project.repository.TaskStatusRepository;
 
 import java.util.UUID;
 

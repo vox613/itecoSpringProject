@@ -5,13 +5,13 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.ContractDtoRequest;
 import ru.iteco.project.controller.dto.ContractDtoResponse;
-import ru.iteco.project.dao.ContractStatusRepository;
-import ru.iteco.project.dao.TaskStatusRepository;
 import ru.iteco.project.domain.Contract;
 import ru.iteco.project.domain.Task;
 import ru.iteco.project.domain.TaskStatus;
 import ru.iteco.project.exception.InvalidContractStatusException;
 import ru.iteco.project.exception.InvalidTaskStatusException;
+import ru.iteco.project.repository.ContractStatusRepository;
+import ru.iteco.project.repository.TaskStatusRepository;
 
 import java.util.Optional;
 import java.util.UUID;

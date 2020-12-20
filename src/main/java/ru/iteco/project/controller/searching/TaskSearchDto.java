@@ -1,114 +1,111 @@
 package ru.iteco.project.controller.searching;
 
 
-import java.math.BigDecimal;
-
 /**
  * Класс - dto для поиска заданий с переданными ограничениями по полям
  */
-public class TaskSearchDto implements SearchDto<TaskSearchDto> {
+public class TaskSearchDto extends AbstractSearchDto {
 
     /*** Статус задания */
-    private String taskStatus;
+    private SearchUnit taskStatus;
 
     /*** Имя задания */
-    private String name;
+    private SearchUnit name;
 
     /*** Описание задания */
-    private String description;
+    private SearchUnit description;
 
     /*** Дата и время до наступления которой необходимо выполнить задание */
-    private String taskCompletionDate;
+    private SearchUnit taskCompletionDate;
 
     /*** Стоимость исполнения задания */
-    private BigDecimal price;
+    private SearchUnit price;
 
     /*** Дата и время создания пользователя */
-    private String createdAt;
+    private SearchUnit createdAt;
 
     /*** Дата и время последнего обновления пользователя */
-    private String updatedAt;
+    private SearchUnit updatedAt;
 
     /*** Минимальная стоимость задания */
-    private String minPrice;
+    private SearchUnit minPrice;
 
     /*** Максимальная стоимость задания */
-    private String maxPrice;
+    private SearchUnit maxPrice;
 
 
     public TaskSearchDto() {
     }
 
-    public String getTaskStatus() {
+    public SearchUnit getTaskStatus() {
         return taskStatus;
     }
 
-    public void setTaskStatus(String taskStatus) {
+    public void setTaskStatus(SearchUnit taskStatus) {
         this.taskStatus = taskStatus;
     }
 
-
-    public String getName() {
+    public SearchUnit getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(SearchUnit name) {
         this.name = name;
     }
 
-    public String getDescription() {
+    public SearchUnit getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(SearchUnit description) {
         this.description = description;
     }
 
-    public String getTaskCompletionDate() {
+    public SearchUnit getTaskCompletionDate() {
         return taskCompletionDate;
     }
 
-    public void setTaskCompletionDate(String taskCompletionDate) {
+    public void setTaskCompletionDate(SearchUnit taskCompletionDate) {
         this.taskCompletionDate = taskCompletionDate;
     }
 
-    public BigDecimal getPrice() {
+    public SearchUnit getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(SearchUnit price) {
         this.price = price;
     }
 
-    public String getCreatedAt() {
+    public SearchUnit getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(SearchUnit createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public SearchUnit getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(SearchUnit updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public String getMinPrice() {
+    public SearchUnit getMinPrice() {
         return minPrice;
     }
 
-    public void setMinPrice(String minPrice) {
+    public void setMinPrice(SearchUnit minPrice) {
         this.minPrice = minPrice;
     }
 
-    public String getMaxPrice() {
+    public SearchUnit getMaxPrice() {
         return maxPrice;
     }
 
-    public void setMaxPrice(String maxPrice) {
+    public void setMaxPrice(SearchUnit maxPrice) {
         this.maxPrice = maxPrice;
     }
 
