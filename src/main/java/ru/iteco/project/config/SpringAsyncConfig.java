@@ -23,9 +23,9 @@ public class SpringAsyncConfig implements AsyncConfigurer {
     private String maxPoolSize;
 
 
-
     /**
      * Метод получения пула потоков
+     *
      * @return пул потоков для выполнения задач
      */
     @Override
@@ -39,6 +39,7 @@ public class SpringAsyncConfig implements AsyncConfigurer {
 
     /**
      * Перехватчик исключений, возникших во время асинхронного процесса
+     *
      * @return новый объект перехватчика асинхронных исключений
      */
     @Override

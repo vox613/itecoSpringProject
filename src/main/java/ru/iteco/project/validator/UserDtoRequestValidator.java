@@ -10,8 +10,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.UserDtoRequest;
-import ru.iteco.project.model.Role;
-import ru.iteco.project.model.UserStatus;
 
 /**
  * Класс содержит валидаторы для полей объекта запроса UserDtoRequest
@@ -73,9 +71,6 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         if (StringUtils.isEmpty(userForm.getRole())) {
             logger.error("role is empty");
             prepareErrorMessage(errors, "user.role.empty", "role");
-        } else if (!Role.isCorrectValue(userForm.getRole())) {
-            logger.error("role is incorrect");
-            prepareErrorMessage(errors, "user.role.incorrect", "role");
         }
         if (errors.hasErrors()) return;
 
@@ -99,10 +94,11 @@ public class UserDtoRequestValidator extends AbstractDtoValidator implements Val
         }
 
 
-        if (!UserStatus.isCorrectValue(userForm.getUserStatus())) {
-            logger.error("incorrect user status");
-            prepareErrorMessage(errors, "user.status.incorrect", "userStatus");
+        if (StringUtils.isEmpty(userForm.getUserStatus())) {
+            logger.error("user status empty");
+            prepareErrorMessage(errors, "user.status.empty", "userStatus");
         }
+
     }
 
 }

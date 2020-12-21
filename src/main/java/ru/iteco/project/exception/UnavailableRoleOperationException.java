@@ -1,5 +1,9 @@
 package ru.iteco.project.exception;
 
+/**
+ * Класс исключения UnavailableRoleOperationException, возникающего при попытке совершения недопустимой операции
+ * для текущей роли пользователя
+ */
 public class UnavailableRoleOperationException extends RuntimeException {
 
 

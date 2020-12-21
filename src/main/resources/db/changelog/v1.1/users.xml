@@ -1,0 +1,19 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+
+    <changeSet id="1" author="Alexey Alexandrov">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="user"/>
+        </preConditions>
+
+        <renameTable oldTableName="user" newTableName="users"/>
+        <modifyDataType tableName="users" columnName="wallet" newDataType="numeric(1000,2)"/>
+        <comment>Переименовал таблицу из user в users. Для атрибута wallet - изменил тип на numeric(1000,2)
+        </comment>
+    </changeSet>
+
+</databaseChangeLog>

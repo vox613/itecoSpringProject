@@ -34,6 +34,7 @@ public class ContractDtoRequest extends ContractBaseDto {
     public ContractDtoRequest() {
     }
 
+
     public UUID getUserId() {
         return userId;
     }

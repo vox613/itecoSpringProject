@@ -1,0 +1,51 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+
+    <changeSet id="1" author="Alexey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="task"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="task" constraintName="customer_id_fk"/>
+        <addForeignKeyConstraint baseTableName="task"
+                                 baseColumnNames="customer_id"
+                                 constraintName="customer_id_fk"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+        />
+        <addNotNullConstraint tableName="task" columnName="customer_id"/>
+
+        <dropForeignKeyConstraint baseTableName="task" constraintName="executor_id_fk"/>
+        <addForeignKeyConstraint baseTableName="task"
+                                 baseColumnNames="executor_id"
+                                 constraintName="executor_id_fk"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+        />
+
+        <comment> Для полей customer_id и executor_id удалил и затем добавил ForeignKeyConstraint
+            с целью изменения названия таблицы на которую ссылается внешний ключ
+        </comment>
+    </changeSet>
+
+
+    <changeSet id="2" author="Aleksey Aleksandrov">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="task"/>
+        </preConditions>
+
+        <dropNotNullConstraint tableName="task" columnName="executor_id"/>
+        <modifyDataType tableName="task" columnName="price" newDataType="numeric(1000,2)"/>
+        <dropNotNullConstraint tableName="task" columnName="task_decision"/>
+
+        <comment>Для атрибутов: executor_id - снял обязательность, task_decision - снял обязательность,
+            price - изменил тип на numeric(1000,2)
+        </comment>
+    </changeSet>
+
+
+</databaseChangeLog>

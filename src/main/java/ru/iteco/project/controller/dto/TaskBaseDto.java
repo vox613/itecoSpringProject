@@ -14,6 +14,9 @@ public class TaskBaseDto implements DtoInterface {
     /*** Уникальный id заказчика */
     private UUID customerId;
 
+    /*** Уникальный id исполнителя */
+    private UUID executorId;
+
     /*** Имя задания */
     private String name;
 
@@ -79,4 +82,11 @@ public class TaskBaseDto implements DtoInterface {
         this.price = price;
     }
 
+    public UUID getExecutorId() {
+        return executorId;
+    }
+
+    public void setExecutorId(UUID executorId) {
+        this.executorId = executorId;
+    }
 }

@@ -5,20 +5,30 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.TaskDtoRequest;
 import ru.iteco.project.controller.dto.TaskDtoResponse;
 import ru.iteco.project.dao.ContractDAO;
 import ru.iteco.project.dao.TaskDAO;
 import ru.iteco.project.dao.UserDAO;
 import ru.iteco.project.exception.UnavailableRoleOperationException;
-import ru.iteco.project.model.*;
+import ru.iteco.project.model.Contract;
+import ru.iteco.project.model.Task;
+import ru.iteco.project.model.User;
 import ru.iteco.project.service.mappers.TaskDtoEntityMapper;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
-import ru.iteco.project.service.validators.CustomValidator;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static ru.iteco.project.model.TaskStatus.TaskStatusEnum.*;
+import static ru.iteco.project.model.UserRole.UserRoleEnum.EXECUTOR;
+import static ru.iteco.project.model.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.model.UserStatus.UserStatusEnum.*;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с заданиями
@@ -35,138 +45,102 @@ public class TaskServiceImpl implements TaskService {
     private final TaskDAO taskDAO;
     private final UserDAO userDAO;
     private final ContractDAO contractDAO;
-    private final CustomValidator taskValidator;
     private final TaskDtoEntityMapper taskMapper;
     private final UserDtoEntityMapper userMapper;
 
 
-    public TaskServiceImpl(TaskDAO taskDAO, UserDAO userDAO, ContractDAO contractDAO, CustomValidator taskValidator,
+    public TaskServiceImpl(TaskDAO taskDAO, UserDAO userDAO, ContractDAO contractDAO,
                            TaskDtoEntityMapper taskMapper, UserDtoEntityMapper userMapper) {
         this.taskDAO = taskDAO;
         this.userDAO = userDAO;
         this.contractDAO = contractDAO;
-        this.taskValidator = taskValidator;
         this.taskMapper = taskMapper;
         this.userMapper = userMapper;
     }
 
-    /**
-     * Метод сохранения задания в коллекцию
-     *
-     * @param task - задание для сохраннения
-     */
-    @Override
-    public void createTask(Task task) {
-        taskValidator.validate(task);
-        taskDAO.save(task);
-        log.info("now: " + LocalDateTime.now() + " createTask: " + task);
-    }
 
     /**
-     * Метод поиска задания по названию
-     *
-     * @param name - название задания
-     * @return - список заданий, название которых совпадает с переданным
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
      */
     @Override
-    public List<Task> findTaskByName(String name) {
-        List<Task> taskList = taskDAO.findTaskByName(name);
-        log.info("now: " + LocalDateTime.now() + " findTaskByName: " + taskList);
-        return taskList;
-    }
-
-    /**
-     * Метод удаления из коллекции переданного задания
-     *
-     * @param task - задание для удаления
-     * @return - удаленное задание
-     */
-    @Override
-    public Task deleteTask(Task task) {
-        Task deletedTask = taskDAO.delete(task);
-        log.info("now: " + LocalDateTime.now() + " deleteTask: " + deletedTask);
-        return deletedTask;
-    }
-
-    /**
-     * Метод изменения статуса задания на переданный в агументах
-     *
-     * @param task       - задание статус которого необходимо изменить
-     * @param taskStatus - статус на которой меняется состояние задания
-     */
-    @Override
-    public void changeTaskStatusTo(Task task, TaskStatus taskStatus) {
-        task.setTaskStatus(taskStatus);
-        taskDAO.update(task);
-        log.info("now: " + LocalDateTime.now() + " changeTaskStatusTo: " + task + "StatusTo: " + taskStatus);
-    }
-
-    /**
-     * Метод получает все задания из коллекции
-     *
-     * @return - список всех заданий из коллекции
-     */
-    @Override
+    @Transactional(readOnly = true)
     public List<TaskDtoResponse> getAllTasks() {
         ArrayList<TaskDtoResponse> taskDtoResponses = new ArrayList<>();
         for (Task task : taskDAO.getAll()) {
-            taskDtoResponses.add(getTaskById(task.getId()));
+            taskDtoResponses.add(enrichByUsersInfo(task));
         }
         return taskDtoResponses;
     }
 
+
+    /**
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     */
     @Override
+    @Transactional(readOnly = true)
     public List<TaskDtoResponse> getAllUserTasks(UUID userId) {
         return taskDAO.findAllTasksByCustomerId(userId).stream()
-                .map(task -> getTaskById(task.getId()))
+                .map(this::enrichByUsersInfo)
                 .collect(Collectors.toList());
     }
 
+
+    /**
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     */
     @Override
+    @Transactional(readOnly = true)
     public TaskDtoResponse getTaskById(UUID id) {
-        TaskDtoResponse taskDtoResponse = new TaskDtoResponse();
+        TaskDtoResponse taskDtoResponse = null;
         Optional<Task> optionalTask = taskDAO.findTaskById(id);
         if (optionalTask.isPresent()) {
             Task task = optionalTask.get();
-            taskDtoResponse = taskMapper.entityToResponseDto(task);
-            taskDtoResponse.setCustomer(userMapper.entityToResponseDto(task.getCustomer()));
-            if (task.getExecutor() != null) {
-                taskDtoResponse.setExecutor(userMapper.entityToResponseDto(task.getExecutor()));
-            }
+            taskDtoResponse = enrichByUsersInfo(task);
         }
         return taskDtoResponse;
     }
 
 
+    /**
+     * SERIALIZABLE - т.к. во время модификации и создание новых данных не должно быть влияния извне
+     * REQUIRED - в транзакции внешней или новой
+     */
     @Override
-    public TaskDtoRequest createTask(TaskDtoRequest taskDtoRequest) {
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public TaskDtoResponse createTask(TaskDtoRequest taskDtoRequest) {
+        TaskDtoResponse taskDtoResponse = null;
         Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getCustomerId());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             checkUserPermissions(user);
-            user.setUserStatus(UserStatus.ACTIVE);
-            userDAO.save(user);
+            userDAO.updateUserStatus(user, ACTIVE);
             Task task = taskMapper.requestDtoToEntity(taskDtoRequest);
+            task.setCustomer(user);
             taskDAO.save(task);
-            taskDtoRequest.setId(task.getId());
-            taskDtoRequest.setTaskStatus(task.getTaskStatus().name());
-            return taskDtoRequest;
+            taskDtoResponse = enrichByUsersInfo(task);
         }
-        return taskDtoRequest;
+        return taskDtoResponse;
     }
 
 
+    /**
+     * SERIALIZABLE - т.к. во время модификации и создание новых данных не должно быть влияния извне
+     * REQUIRED - в транзакции внешней или новой
+     */
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public TaskDtoResponse updateTask(TaskDtoRequest taskDtoRequest) {
         TaskDtoResponse taskDtoResponse = null;
-        if (taskDtoRequest.getUserId() != null && taskDAO.taskWithIdIsExist(taskDtoRequest.getId())) {
+        if (taskDtoRequest.getUserId() != null
+                && taskDAO.taskWithIdIsExist(taskDtoRequest.getUserId())) {
+
             Optional<User> userOptional = userDAO.findUserById(taskDtoRequest.getUserId());
-            Optional<Task> taskById = taskDAO.findTaskById(taskDtoRequest.getId());
+            Optional<Task> taskById = taskDAO.findTaskById(taskDtoRequest.getUserId());
             if (userOptional.isPresent() && taskById.isPresent()) {
                 User user = userOptional.get();
                 Task task = taskById.get();
                 if (allowToUpdate(user, task)) {
-                    taskMapper.requestDtoToEntity(taskDtoRequest, task, user.getRole());
+                    taskMapper.requestDtoToEntity(taskDtoRequest, task, user.getRole().getValue());
                     taskDAO.update(task);
                     taskDtoResponse = enrichByUsersInfo(task);
                 }
@@ -175,19 +149,42 @@ public class TaskServiceImpl implements TaskService {
         return taskDtoResponse;
     }
 
+
+    /**
+     * SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
+     * REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
+     * должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
+     */
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteTask(UUID id) {
-        Optional<Task> taskById = taskDAO.findTaskById(id);
-        if (taskById.isPresent()) {
-            Contract contractByTask = contractDAO.findContractByTask(taskById.get());
-            if (contractByTask != null){
-                contractDAO.delete(contractByTask);
-            }
+        Optional<Task> optionalTask = taskDAO.findTaskById(id);
+        if (optionalTask.isPresent()) {
+            Optional<Contract> optionalContract = contractDAO.findContractByTask(optionalTask.get());
+            optionalContract.ifPresent(contractDAO::delete);
             taskDAO.deleteByPK(id);
             return true;
         }
         return false;
     }
+
+
+    /**
+     * Метод формирует ответ TaskDtoResponse и обогащает его данными о заказчике и исполнителе
+     *
+     * @param task - объект задания
+     * @return - объект TaskDtoResponse с подготовленными данными о задании, исполнителе и заказчике
+     */
+    @Override
+    public TaskDtoResponse enrichByUsersInfo(Task task) {
+        TaskDtoResponse taskDtoResponse = taskMapper.entityToResponseDto(task);
+        taskDtoResponse.setCustomer(userMapper.entityToResponseDto(task.getCustomer()));
+        if (task.getExecutor() != null) {
+            taskDtoResponse.setExecutor(userMapper.entityToResponseDto(task.getExecutor()));
+        }
+        return taskDtoResponse;
+    }
+
 
     public TaskDAO getTaskDAO() {
         return taskDAO;
@@ -195,10 +192,6 @@ public class TaskServiceImpl implements TaskService {
 
     public UserDAO getUserDAO() {
         return userDAO;
-    }
-
-    public CustomValidator getTaskValidator() {
-        return taskValidator;
     }
 
     public TaskDtoEntityMapper getTaskMapper() {
@@ -219,15 +212,16 @@ public class TaskServiceImpl implements TaskService {
      * false - в любом ином случае
      */
     private boolean allowToUpdate(User user, Task task) {
-        boolean userNotBlocked = !UserStatus.BLOCKED.equals(user.getUserStatus());
-        boolean userIsCustomerAndTaskRegistered = user.getId().equals(task.getCustomer().getId()) &&
-                (TaskStatus.TASK_REGISTERED.equals(task.getTaskStatus()) || TaskStatus.TASK_ON_CHECK.equals(task.getTaskStatus()));
-        boolean userIsExecutorAndTaskInProgress = (task.getExecutor() != null) &&
+        boolean userNotBlocked = !isEqualsUserStatus(BLOCKED, user);
+        boolean userIsCustomerAndTaskOnCustomer = user.getId().equals(task.getCustomer().getId()) &&
+                (isEqualsTaskStatus(REGISTERED, task) || isEqualsTaskStatus(ON_CHECK, task));
+        boolean userIsExecutorAndTaskOnExecutor = (task.getExecutor() != null) &&
                 user.getId().equals(task.getExecutor().getId()) &&
-                (TaskStatus.TASK_IN_PROGRESS.equals(task.getTaskStatus()) || TaskStatus.TASK_ON_FIX.equals(task.getTaskStatus()));
+                (isEqualsTaskStatus(IN_PROGRESS, task) || isEqualsTaskStatus(ON_FIX, task));
 
-        return userNotBlocked && (userIsCustomerAndTaskRegistered || userIsExecutorAndTaskInProgress);
+        return userNotBlocked && (userIsCustomerAndTaskOnCustomer || userIsExecutorAndTaskOnExecutor);
     }
+
 
     /**
      * Метод проверяет доступна ли для пользователя операция создания задания
@@ -235,23 +229,8 @@ public class TaskServiceImpl implements TaskService {
      * @param user - сущность пользователя
      */
     private void checkUserPermissions(User user) {
-        if (Role.EXECUTOR.equals(user.getRole()) || UserStatus.BLOCKED.equals(user.getUserStatus())) {
+        if (isEqualsUserRole(EXECUTOR, user) || isEqualsUserStatus(BLOCKED, user)) {
             throw new UnavailableRoleOperationException(unavailableOperationMessage);
         }
-    }
-
-    /**
-     * Метод формирует ответ TaskDtoResponse и обогащает его данными о заказчике и исполнителе
-     *
-     * @param task - объект задания
-     * @return - объект TaskDtoResponse с подготовленными данными о задании, исполнителе и заказчике
-     */
-    public TaskDtoResponse enrichByUsersInfo(Task task) {
-        TaskDtoResponse taskDtoResponse = taskMapper.entityToResponseDto(task);
-        taskDtoResponse.setCustomer(userMapper.entityToResponseDto(task.getCustomer()));
-        if (task.getExecutor() != null) {
-            taskDtoResponse.setExecutor(userMapper.entityToResponseDto(task.getExecutor()));
-        }
-        return taskDtoResponse;
     }
 }
