@@ -147,8 +147,8 @@ public class ContractServiceImpl implements ContractService {
         if (contractDtoRequest.getUserId() != null
                 && contractRepository.existsById(contractDtoRequest.getId())) {
 
-            Optional<User> userOptional = userDAO.findUserById(contractDtoRequest.getUserId());
-            Optional<Contract> contractById = contractDAO.findContractById(contractDtoRequest.getId());
+            Optional<User> userOptional = userRepository.findById(contractDtoRequest.getUserId());
+            Optional<Contract> contractById = contractRepository.findById(contractDtoRequest.getId());
             if (userOptional.isPresent() && contractById.isPresent()) {
                 User user = userOptional.get();
                 Contract contract = contractById.get();
