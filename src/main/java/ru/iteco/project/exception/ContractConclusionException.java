@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class ContractConclusionException extends RuntimeException {
 
-    /** Список возникших ошибок */
+    /*** Список возникших ошибок */
     private List<ObjectError> objectErrorList = new ArrayList<>();
 
     public ContractConclusionException() {

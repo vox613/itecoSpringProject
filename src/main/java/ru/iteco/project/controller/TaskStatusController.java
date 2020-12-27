@@ -6,11 +6,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-import ru.iteco.project.controller.dto.*;
+import ru.iteco.project.controller.dto.TaskStatusBaseDto;
+import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
+import ru.iteco.project.controller.dto.TaskStatusDtoResponse;
 import ru.iteco.project.service.TaskStatusService;
-import ru.iteco.project.service.UserStatusService;
 import ru.iteco.project.validator.TaskStatusDtoRequestValidator;
-import ru.iteco.project.validator.UserStatusDtoRequestValidator;
 
 import java.net.URI;
 import java.util.ArrayList;

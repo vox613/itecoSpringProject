@@ -3,7 +3,7 @@ package ru.iteco.project.service.mappers;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserRoleDtoRequest;
 import ru.iteco.project.controller.dto.UserRoleDtoResponse;
-import ru.iteco.project.model.UserRole;
+import ru.iteco.project.domain.UserRole;
 
 import java.util.UUID;
 

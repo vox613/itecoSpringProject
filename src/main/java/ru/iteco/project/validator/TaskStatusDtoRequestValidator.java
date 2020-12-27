@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
@@ -32,21 +32,21 @@ public class TaskStatusDtoRequestValidator extends AbstractDtoValidator implemen
 
         TaskStatusDtoRequest taskStatusDtoRequest = (TaskStatusDtoRequest) target;
 
-        if (StringUtils.isEmpty(taskStatusDtoRequest.getUserId())) {
+        if (ObjectUtils.isEmpty(taskStatusDtoRequest.getUserId())) {
             logger.error("user Id is empty");
             prepareErrorMessage(errors, "status.task.id.empty", "userId");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskStatusDtoRequest.getValue())) {
+        if (ObjectUtils.isEmpty(taskStatusDtoRequest.getValue())) {
             logger.error("status value is empty");
             prepareErrorMessage(errors, "status.task.value.empty", "value");
         }
         if (errors.hasErrors()) return;
 
 
-        if (StringUtils.isEmpty(taskStatusDtoRequest.getDescription())) {
+        if (ObjectUtils.isEmpty(taskStatusDtoRequest.getDescription())) {
             logger.error("status description is empty");
             prepareErrorMessage(errors, "status.task.description.empty", "description");
         }

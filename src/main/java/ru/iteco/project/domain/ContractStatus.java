@@ -1,21 +1,40 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.UUID;
 
 /**
  * Перечисление возможных статусов договора
  */
+@Entity
+@Table(name = "contract_statuses")
 public class ContractStatus implements Identified<UUID> {
 
     /*** Уникальный id статуса контракта */
+    @Id
+    @Column
     private UUID id;
 
     /*** Наименование статуса контракта */
+    @Column(nullable = false, unique = true)
     private String value;
 
     /*** Описание статуса контракта */
+    @Column(nullable = false)
     private String description;
 
+
+    public ContractStatus() {
+    }
+
+    public ContractStatus(UUID id, String value, String description) {
+        this.id = id;
+        this.value = value;
+        this.description = description;
+    }
 
     public UUID getId() {
         return id;

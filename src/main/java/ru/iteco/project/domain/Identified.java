@@ -1,4 +1,4 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
 import java.io.Serializable;
 

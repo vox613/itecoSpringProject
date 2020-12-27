@@ -4,13 +4,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
-import ru.iteco.project.dao.TaskDAO;
-import ru.iteco.project.dao.UserRoleDAO;
-import ru.iteco.project.dao.UserStatusDAO;
+import ru.iteco.project.dao.TaskRepository;
+import ru.iteco.project.dao.UserRoleRepository;
+import ru.iteco.project.dao.UserStatusRepository;
 import ru.iteco.project.exception.InvalidUserRoleException;
 import ru.iteco.project.exception.InvalidUserStatusException;
-import ru.iteco.project.model.User;
+import ru.iteco.project.domain.User;
+import ru.iteco.project.domain.UserStatus;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -19,14 +21,14 @@ import java.util.UUID;
 @Service
 public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest, UserDtoResponse> {
 
-    /*** Объект доступа к DAO слою Заданий*/
-    private final TaskDAO taskDAO;
+    /*** Объект доступа к репозиторию заданий */
+    private final TaskRepository taskRepository;
 
-    /*** Объект доступа к DAO слою ролей пользователей*/
-    private final UserRoleDAO userRoleDAO;
+    /*** Объект доступа к репозиторию ролей пользователей */
+    private final UserRoleRepository userRoleRepository;
 
-    /*** Объект доступа к DAO слою статусов пользователей*/
-    private final UserStatusDAO userStatusDAO;
+    /*** Объект доступа к репозиторию статусов пользователей */
+    private final UserStatusRepository userStatusRepository;
 
     @Value("${errors.user.role.operation.unavailable}")
     private String unavailableOperationMessage;
@@ -34,11 +36,15 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
     @Value("${errors.user.role.invalid}")
     private String userRoleIsInvalidMessage;
 
+    @Value("${errors.user.status.invalid}")
+    private String userStatusIsInvalidMessage;
 
-    public UserDtoEntityMapper(TaskDAO taskDAO, UserRoleDAO userRoleDAO, UserStatusDAO userStatusDAO) {
-        this.taskDAO = taskDAO;
-        this.userRoleDAO = userRoleDAO;
-        this.userStatusDAO = userStatusDAO;
+
+    public UserDtoEntityMapper(TaskRepository taskRepository, UserRoleRepository userRoleRepository,
+                               UserStatusRepository userStatusRepository) {
+        this.taskRepository = taskRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.userStatusRepository = userStatusRepository;
     }
 
     @Override
@@ -55,7 +61,7 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
             userDtoResponse.setRole(entity.getRole().getValue());
             userDtoResponse.setUserStatus(entity.getUserStatus().getValue());
             userDtoResponse.setWallet(entity.getWallet());
-            taskDAO.findAllTasksByUser(entity)
+            taskRepository.findTasksByUser(entity)
                     .forEach(task -> userDtoResponse.getTasksIdList().add(task.getId()));
         }
         return userDtoResponse;
@@ -74,24 +80,26 @@ public class UserDtoEntityMapper implements DtoEntityMapper<User, UserDtoRequest
             user.setPassword(requestDto.getPassword());
             user.setEmail(requestDto.getEmail());
             user.setPhoneNumber(requestDto.getPhoneNumber());
-            user.setRole(userRoleDAO.findUserRoleByValue(requestDto.getRole())
+            user.setRole(userRoleRepository.findUserRoleByValue(requestDto.getRole())
                     .orElseThrow(() -> new InvalidUserRoleException(userRoleIsInvalidMessage)));
-            user.setUserStatus(userStatusDAO.findUserStatusByValue(requestDto.getUserStatus())
+            user.setUserStatus(userStatusRepository.findUserStatusByValue(requestDto.getUserStatus())
                     .orElseThrow(() -> new InvalidUserStatusException(unavailableOperationMessage)));
             user.setWallet(requestDto.getWallet());
         }
         return user;
     }
 
-    public TaskDAO getTaskDAO() {
-        return taskDAO;
+    /**
+     * Метод устанавливает переданному пользователю статус соответствующий переданному объекту userStatusEnum
+     *
+     * @param user           - сущность пользователя
+     * @param userStatusEnum - объект перечисления статусов пользователей
+     */
+    public void updateUserStatus(User user, UserStatus.UserStatusEnum userStatusEnum) {
+        Optional<UserStatus> userStatusByValue = userStatusRepository.findUserStatusByValue(userStatusEnum.name());
+        UserStatus userStatus = userStatusByValue
+                .orElseThrow(() -> new InvalidUserStatusException(userStatusIsInvalidMessage));
+        user.setUserStatus(userStatus);
     }
 
-    public UserRoleDAO getUserRoleDAO() {
-        return userRoleDAO;
-    }
-
-    public UserStatusDAO getUserStatusDAO() {
-        return userStatusDAO;
-    }
 }

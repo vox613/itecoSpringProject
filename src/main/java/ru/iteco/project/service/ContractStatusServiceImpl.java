@@ -4,24 +4,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.ContractStatusDtoRequest;
 import ru.iteco.project.controller.dto.ContractStatusDtoResponse;
-import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
-import ru.iteco.project.controller.dto.TaskStatusDtoResponse;
-import ru.iteco.project.dao.ContractDAO;
-import ru.iteco.project.dao.ContractStatusDAO;
-import ru.iteco.project.dao.TaskStatusDAO;
-import ru.iteco.project.dao.UserDAO;
-import ru.iteco.project.model.*;
+import ru.iteco.project.dao.ContractRepository;
+import ru.iteco.project.dao.ContractStatusRepository;
+import ru.iteco.project.dao.UserRepository;
+import ru.iteco.project.domain.Contract;
+import ru.iteco.project.domain.ContractStatus;
+import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.ContractStatusDtoEntityMapper;
-import ru.iteco.project.service.mappers.TaskStatusDtoEntityMapper;
 
 import java.util.*;
 
-import static ru.iteco.project.model.UserRole.UserRoleEnum.ADMIN;
-import static ru.iteco.project.model.UserRole.UserRoleEnum.isEqualsUserRole;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.ADMIN;
+import static ru.iteco.project.domain.UserRole.UserRoleEnum.isEqualsUserRole;
 
 /**
  * Класс реализует функционал сервисного слоя для работы со статусами контрактов
@@ -31,34 +28,43 @@ public class ContractStatusServiceImpl implements ContractStatusService {
 
     private static final Logger log = LogManager.getLogger(ContractStatusServiceImpl.class.getName());
 
+    /*** Объект доступа к репозиторию статусов контрактов */
+    private final ContractStatusRepository contractStatusRepository;
 
-    private final ContractStatusDAO contractStatusDAO;
-    private final ContractDAO contractsDAO;
-    private final UserDAO userDAO;
+    /*** Объект доступа к репозиторию контрактов */
+    private final ContractRepository contractRepository;
+
+    /*** Объект доступа к репозиторию пользователей */
+    private final UserRepository userRepository;
+
+    /*** Объект сервисного слоя контрактов */
     private final ContractService contractService;
+
+    /*** Объект маппера dto статуса контракта в сущность статуса контракта */
     private final ContractStatusDtoEntityMapper contractStatusDtoEntityMapper;
 
 
-    public ContractStatusServiceImpl(ContractStatusDAO contractStatusDAO, ContractDAO contractsDAO, UserDAO userDAO,
-                                     ContractService contractService, ContractStatusDtoEntityMapper contractStatusDtoEntityMapper) {
+    public ContractStatusServiceImpl(ContractStatusRepository contractStatusRepository, ContractRepository contractRepository,
+                                     UserRepository userRepository, ContractService contractService,
+                                     ContractStatusDtoEntityMapper contractStatusDtoEntityMapper) {
 
-        this.contractStatusDAO = contractStatusDAO;
-        this.contractsDAO = contractsDAO;
-        this.userDAO = userDAO;
+        this.contractStatusRepository = contractStatusRepository;
+        this.contractRepository = contractRepository;
+        this.userRepository = userRepository;
         this.contractService = contractService;
         this.contractStatusDtoEntityMapper = contractStatusDtoEntityMapper;
     }
 
 
     /**
-     *  По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
-     *  REQUIRED - в транзакции внешней или новой
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     * REQUIRED - в транзакции внешней или новой
      */
     @Override
     @Transactional(readOnly = true)
     public ContractStatusDtoResponse getContractStatusById(UUID id) {
         ContractStatusDtoResponse contractStatusDtoResponse = new ContractStatusDtoResponse();
-        Optional<ContractStatus> optionalContractStatusById = contractStatusDAO.findContractStatusById(id);
+        Optional<ContractStatus> optionalContractStatusById = contractStatusRepository.findById(id);
         if (optionalContractStatusById.isPresent()) {
             ContractStatus contractStatus = optionalContractStatusById.get();
             contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(contractStatus);
@@ -73,10 +79,10 @@ public class ContractStatusServiceImpl implements ContractStatusService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ContractStatusDtoResponse createContractStatus(ContractStatusDtoRequest contractStatusDtoRequest) {
-        ContractStatusDtoResponse  contractStatusDtoResponse = new ContractStatusDtoResponse();
+        ContractStatusDtoResponse contractStatusDtoResponse = new ContractStatusDtoResponse();
         if (operationIsAllow(contractStatusDtoRequest)) {
             ContractStatus newContractStatus = contractStatusDtoEntityMapper.requestDtoToEntity(contractStatusDtoRequest);
-            contractStatusDAO.save(newContractStatus);
+            contractStatusRepository.save(newContractStatus);
             contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(newContractStatus);
         }
         return contractStatusDtoResponse;
@@ -92,42 +98,42 @@ public class ContractStatusServiceImpl implements ContractStatusService {
         ContractStatusDtoResponse contractStatusDtoResponse = new ContractStatusDtoResponse();
         if (operationIsAllow(contractStatusDtoRequest) &&
                 Objects.equals(id, contractStatusDtoRequest.getId()) &&
-                contractStatusDAO.contractStatusWithIdIsExist(contractStatusDtoRequest.getId())) {
+                contractStatusRepository.existsById(contractStatusDtoRequest.getId())) {
 
             ContractStatus contractStatus = contractStatusDtoEntityMapper.requestDtoToEntity(contractStatusDtoRequest);
             contractStatus.setId(id);
-            contractStatusDAO.update(contractStatus);
+            contractStatusRepository.save(contractStatus);
             contractStatusDtoResponse = contractStatusDtoEntityMapper.entityToResponseDto(contractStatus);
         }
         return contractStatusDtoResponse;
     }
 
     /**
-     *  По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
+     * По умолчанию в Postgres isolation READ_COMMITTED + недоступна модификация данных
      */
     @Override
     @Transactional(readOnly = true)
     public ArrayList<ContractStatusDtoResponse> getAllContractsStatuses() {
         ArrayList<ContractStatusDtoResponse> contractStatusDtoResponsesList = new ArrayList<>();
-        for (ContractStatus contractStatus : contractStatusDAO.getAll()) {
+        for (ContractStatus contractStatus : contractStatusRepository.findAll()) {
             contractStatusDtoResponsesList.add(contractStatusDtoEntityMapper.entityToResponseDto(contractStatus));
         }
         return contractStatusDtoResponsesList;
     }
 
     /**
-     *  SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
-     *  REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
-     *  должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
+     * SERIALIZABLE - во время удаления внешние тразнзакции не должны иметь никакого доступа к записи
+     * REQUIRED - в транзакции внешней или новой, т.к. используется в других сервисах при удалении записей и
+     * должна быть применена только при выполнении общей транзакции (единицы бизнес логики)
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteContractStatus(UUID id) {
-        Optional<ContractStatus> contractStatusById = contractStatusDAO.findContractStatusById(id);
+        Optional<ContractStatus> contractStatusById = contractStatusRepository.findById(id);
         if (contractStatusById.isPresent()) {
-            Collection<Contract> allContractsByStatus = contractsDAO.findAllContractsByStatus(contractStatusById.get());
+            Collection<Contract> allContractsByStatus = contractRepository.findContractsByContractStatus(contractStatusById.get());
             allContractsByStatus.forEach(contract -> contractService.deleteContract(contract.getId()));
-            contractStatusDAO.deleteByPK(id);
+            contractStatusRepository.deleteById(id);
             return true;
         }
         return false;
@@ -141,7 +147,7 @@ public class ContractStatusServiceImpl implements ContractStatusService {
      */
     private boolean operationIsAllow(ContractStatusDtoRequest contractStatusDtoRequest) {
         if ((contractStatusDtoRequest != null) && (contractStatusDtoRequest.getUserId() != null)) {
-            Optional<User> userById = userDAO.findUserById(contractStatusDtoRequest.getUserId());
+            Optional<User> userById = userRepository.findById(contractStatusDtoRequest.getUserId());
             if (userById.isPresent()) {
                 return isEqualsUserRole(ADMIN, userById.get());
             }

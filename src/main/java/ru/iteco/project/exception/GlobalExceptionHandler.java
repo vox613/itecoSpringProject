@@ -60,7 +60,6 @@ public class GlobalExceptionHandler {
     /**
      * Перехватчик исключения InvalidUserRoleException, возникающего при попытке создать или получить из БД
      * пользователя с невалидной ролью
-     * ролью
      *
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме
@@ -98,14 +97,27 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Перехватчик исключения InvalidTaskStatusException, возникающего при попытке создания/получения/обновления задания
-     * с использованием невалидного/удаленного статуса задания
+     * Перехватчик исключения InvalidContractStatusException, возникающего при попытке обновления контракта
+     * с использованием невалидного/удаленного статуса контракта
      *
      * @param e - объект исключения
      * @return - объект ResponseError с полной информацией о возникшей проблеме
      */
     @ExceptionHandler(InvalidContractStatusException.class)
     public ResponseEntity<ResponseError> invalidContractStatusException(InvalidContractStatusException e) {
+        ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
+        return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Перехватчик исключения LocalDateTimeConvertException, возникающего при ошибке преобразования
+     * значения поля с типом LocalDateTime в значение с типом sql.Timestamp для сохранения в БД
+     *
+     * @param e - объект исключения
+     * @return - объект ResponseError с полной информацией о возникшей проблеме
+     */
+    @ExceptionHandler(LocalDateTimeConvertException.class)
+    public ResponseEntity<ResponseError> localDateTimeConvertException(LocalDateTimeConvertException e) {
         ResponseError responseError = new ResponseError(UUID.randomUUID(), e.getLocalizedMessage(), e.getClass().getName());
         return new ResponseEntity<>(responseError, new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }

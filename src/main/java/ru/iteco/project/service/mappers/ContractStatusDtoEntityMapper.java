@@ -3,10 +3,7 @@ package ru.iteco.project.service.mappers;
 import org.springframework.stereotype.Service;
 import ru.iteco.project.controller.dto.ContractStatusDtoRequest;
 import ru.iteco.project.controller.dto.ContractStatusDtoResponse;
-import ru.iteco.project.controller.dto.TaskStatusDtoRequest;
-import ru.iteco.project.controller.dto.TaskStatusDtoResponse;
-import ru.iteco.project.model.ContractStatus;
-import ru.iteco.project.model.TaskStatus;
+import ru.iteco.project.domain.ContractStatus;
 
 import java.util.UUID;
 

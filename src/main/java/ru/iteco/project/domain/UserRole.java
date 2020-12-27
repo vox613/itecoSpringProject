@@ -1,17 +1,36 @@
-package ru.iteco.project.model;
+package ru.iteco.project.domain;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.UUID;
 
 /**
  * Модель данных пердставляющая роли пользователей
  */
+@Entity
+@Table(name = "user_roles")
 public class UserRole implements Identified<UUID> {
 
     /*** Уникальный id роли пользователя */
+    @Id
+    @Column
     private UUID id;
 
     /*** Наименование роли пользователя */
+    @Column(nullable = false, unique = true)
     private String value;
+
+
+    public UserRole() {
+    }
+
+    public UserRole(UUID id, String value) {
+        this.id = id;
+        this.value = value;
+    }
+
 
     @Override
     public UUID getId() {
@@ -40,7 +59,6 @@ public class UserRole implements Identified<UUID> {
         EXECUTOR;
 
 
-
         /**
          * Метод проверяет является ли входная строка текстовым представлением одного из элементов перечисления
          *
@@ -62,7 +80,7 @@ public class UserRole implements Identified<UUID> {
          * Метод проверяет эквивалентна ли роль пользователя переданному значению роли пользователя
          *
          * @param userRoleEnum - Элемент перечисления доступных ролей пользователя
-         * @param user     - сущность пользователя
+         * @param user         - сущность пользователя
          * @return true - роль пользоваателя эквивалентен переданному значению,
          * false - роль пользователя не эквивалентен переданному значению
          */
@@ -76,7 +94,7 @@ public class UserRole implements Identified<UUID> {
          * Метод проверяет эквивалентна ли роль пользователя переданному значению роли пользователя
          *
          * @param userRoleEnum - Элемент перечисления доступных ролей пользователя
-         * @param userRole - строковое представление роли пользователя
+         * @param userRole     - строковое представление роли пользователя
          * @return true - роль пользоваателя эквивалентен переданному значению,
          * false - роль пользователя не эквивалентен переданному значению
          */

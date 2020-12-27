@@ -7,17 +7,16 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iteco.project.controller.dto.UserDtoRequest;
 import ru.iteco.project.controller.dto.UserDtoResponse;
-import ru.iteco.project.dao.TaskDAO;
-import ru.iteco.project.dao.UserDAO;
-import ru.iteco.project.model.Task;
-import ru.iteco.project.model.User;
+import ru.iteco.project.dao.TaskRepository;
+import ru.iteco.project.dao.UserRepository;
+import ru.iteco.project.domain.User;
 import ru.iteco.project.service.mappers.UserDtoEntityMapper;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.iteco.project.model.UserStatus.UserStatusEnum.CREATED;
-import static ru.iteco.project.model.UserStatus.UserStatusEnum.isEqualsUserStatus;
+import static ru.iteco.project.domain.UserStatus.UserStatusEnum.CREATED;
+import static ru.iteco.project.domain.UserStatus.UserStatusEnum.isEqualsUserStatus;
 
 /**
  * Класс реализует функционал сервисного слоя для работы с пользователями
@@ -27,15 +26,22 @@ public class UserServiceImpl implements UserService {
 
     private static final Logger log = LogManager.getLogger(UserServiceImpl.class.getName());
 
-    private final UserDAO userDAO;
-    private final TaskDAO taskDAO;
+    /*** Объект доступа к репозиторию пользователей */
+    private final UserRepository userRepository;
+
+    /*** Объект доступа к репозиторию заданий */
+    private final TaskRepository taskRepository;
+
+    /*** Объект сервисного слоя заданий */
     private final TaskService taskService;
+
+    /*** Объект маппера dto пользователя в сущность пользователя */
     private final UserDtoEntityMapper userMapper;
 
 
-    public UserServiceImpl(UserDAO userDAO, TaskDAO taskDAO, TaskService taskService, UserDtoEntityMapper userMapper) {
-        this.userDAO = userDAO;
-        this.taskDAO = taskDAO;
+    public UserServiceImpl(UserRepository userRepository, TaskRepository taskRepository, TaskService taskService, UserDtoEntityMapper userMapper) {
+        this.userRepository = userRepository;
+        this.taskRepository = taskRepository;
         this.taskService = taskService;
         this.userMapper = userMapper;
     }
@@ -48,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserDtoResponse getUserById(UUID uuid) {
         UserDtoResponse userDtoResponse = new UserDtoResponse();
-        Optional<User> optionalUser = userDAO.findUserById(uuid);
+        Optional<User> optionalUser = userRepository.findById(uuid);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             userDtoResponse = userMapper.entityToResponseDto(user);
@@ -67,7 +73,7 @@ public class UserServiceImpl implements UserService {
         if (isCorrectLoginEmail(userDtoRequest.getLogin(), userDtoRequest.getEmail())
                 && isEqualsUserStatus(CREATED, userDtoRequest.getUserStatus())) {
             User newUser = userMapper.requestDtoToEntity(userDtoRequest);
-            userDAO.save(newUser);
+            userRepository.save(newUser);
             userDtoResponse = userMapper.entityToResponseDto(newUser);
         }
         return userDtoResponse;
@@ -81,7 +87,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public List<UserDtoResponse> createBundleUsers(List<UserDtoRequest> userDtoRequestList) {
         List<User> usersList = userDtoRequestList.stream().map(userMapper::requestDtoToEntity).collect(Collectors.toList());
-        userDAO.addAll(usersList);
+        userRepository.saveAll(usersList);
         return usersList.stream().map(userMapper::entityToResponseDto).collect(Collectors.toList());
     }
 
@@ -93,10 +99,10 @@ public class UserServiceImpl implements UserService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public UserDtoResponse updateUser(UserDtoRequest userDtoRequest) {
         UserDtoResponse userDtoResponse = null;
-        if (userDAO.userWithIdIsExist(userDtoRequest.getId())) {
+        if (userRepository.existsById(userDtoRequest.getId())) {
             User user = userMapper.requestDtoToEntity(userDtoRequest);
             user.setId(userDtoRequest.getId());
-            userDAO.update(user);
+            userRepository.save(user);
             userDtoResponse = userMapper.entityToResponseDto(user);
         }
         return userDtoResponse;
@@ -109,7 +115,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public ArrayList<UserDtoResponse> getAllUsers() {
         ArrayList<UserDtoResponse> userDtoResponseList = new ArrayList<>();
-        for (User user : userDAO.getAll()) {
+        for (User user : userRepository.findAll()) {
             userDtoResponseList.add(userMapper.entityToResponseDto(user));
         }
         return userDtoResponseList;
@@ -123,20 +129,17 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Boolean deleteUser(UUID id) {
-        Optional<User> optionalUser = userDAO.findUserById(id);
+        Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
-            Collection<Task> allTasksByUser = taskDAO.findAllTasksByUser(optionalUser.get());
-            allTasksByUser.forEach(task -> taskService.deleteTask(task.getId()));
-            userDAO.deleteByPK(id);
+            User user = optionalUser.get();
+            taskRepository.findTasksByUser(user)
+                    .forEach(task -> taskService.deleteTask(task.getId()));
+            userRepository.deleteById(id);
             return true;
         }
         return false;
     }
 
-
-    public UserDAO getUserDAO() {
-        return userDAO;
-    }
 
     public UserDtoEntityMapper getUserMapper() {
         return userMapper;
@@ -150,6 +153,6 @@ public class UserServiceImpl implements UserService {
      * @return - true - логин и email не пусты и пользователя с такими данными не существует, false - в любом ином случае
      */
     private boolean isCorrectLoginEmail(String login, String email) {
-        return !(userDAO.emailExist(email) || userDAO.loginExist(login));
+        return !userRepository.existsByEmailOrLogin(email, login);
     }
 }
