@@ -35,6 +35,11 @@ public interface PredicateProducer<C, P, R, K> {
     K produce(C c, P p, R r);
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией EQUAL
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> equal() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) ->
                 new ComparisonPredicate((CriteriaBuilderImpl) cb,
@@ -44,6 +49,11 @@ public interface PredicateProducer<C, P, R, K> {
                 );
     }
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией NOT_EQUAL
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> notEqual() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) ->
                 new ComparisonPredicate((CriteriaBuilderImpl) cb,
@@ -54,6 +64,11 @@ public interface PredicateProducer<C, P, R, K> {
     }
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией BETWEEN
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> between() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
             if (LocalDateTime.class.equals(path.getJavaType())) {
@@ -73,17 +88,32 @@ public interface PredicateProducer<C, P, R, K> {
     }
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией LIKE
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> like() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) ->
                 cb.like(path, "%" + restriction.getValue() + "%");
     }
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией NOT_LIKE
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> notLike() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) ->
                 cb.notLike(path, "%" + restriction.getValue() + "%");
     }
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией LESS_THAN
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> lessThan() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
             if (LocalDateTime.class.equals(path.getJavaType())) {
@@ -96,6 +126,11 @@ public interface PredicateProducer<C, P, R, K> {
         };
     }
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией GREATER_THAN
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> greaterThan() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
             if (LocalDateTime.class.equals(path.getJavaType())) {
@@ -109,6 +144,11 @@ public interface PredicateProducer<C, P, R, K> {
     }
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией LESS_THAN_OR_EQUAL
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> lessThanOrEqual() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
             if (LocalDateTime.class.equals(path.getJavaType())) {
@@ -121,6 +161,11 @@ public interface PredicateProducer<C, P, R, K> {
         };
     }
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией GREATER_THAN_OR_EQUAL
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> greaterThanOrEqual() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
             if (LocalDateTime.class.equals(path.getJavaType())) {
@@ -134,6 +179,11 @@ public interface PredicateProducer<C, P, R, K> {
     }
 
 
+    /**
+     * Метод получения предиката для поиска значений с логической операцией NOT_BETWEEN
+     *
+     * @return - сформированный объект предиката
+     */
     static PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate> notBetween() {
         return (CriteriaBuilder cb, Path path, CriteriaObject.RestrictionValues restriction) -> {
 

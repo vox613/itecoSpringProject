@@ -19,10 +19,16 @@ import static ru.iteco.project.service.specifications.SearchOperations.*;
 @Service
 public class SpecificationBuilder<T> {
 
-    /*** Справочник со держащий наименование операции поиска против метода формирования предиката для этой операции**/
+    /*** Справочник содержащий наименование операции поиска против метода формирования предиката для этой операции**/
     private final EnumMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>
             predicatesForSearchOperations = fillPredicatesForSearchOperations();
 
+    /**
+     * Метод заполнения справочника предикатов predicatesForSearchOperations
+     *
+     * @return - заполенный экземпляр EnumMap со значениями предикатов реализованных
+     * в ru.iteco.project.service.specifications.PredicateProducer.java
+     */
     private EnumMap fillPredicatesForSearchOperations() {
         return new EnumMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>(SearchOperations.class) {{
             put(EQUAL, PredicateProducer.equal());
