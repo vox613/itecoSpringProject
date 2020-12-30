@@ -1,20 +1,15 @@
 package ru.iteco.project.service.specifications;
 
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import ru.iteco.project.controller.searching.SearchUnit;
-import ru.iteco.project.service.mappers.DateTimeMapper;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.EnumMap;
 
 import static ru.iteco.project.service.specifications.SearchOperations.*;
 
@@ -25,101 +20,27 @@ import static ru.iteco.project.service.specifications.SearchOperations.*;
 public class SpecificationBuilder<T> {
 
     /*** Справочник со держащий наименование операции поиска против метода формирования предиката для этой операции**/
-    private final HashMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>
-            predicatesForSearchOperations = new HashMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>() {{
+    private final EnumMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>
+            predicatesForSearchOperations = fillPredicatesForSearchOperations();
 
-        put(EQUAL, (cb, path, restriction) -> new ComparisonPredicate((CriteriaBuilderImpl) cb, ComparisonPredicate.ComparisonOperator.EQUAL, path, restriction.getTypedValue()));
-        put(NOT_EQUAL, (cb, path, restriction) -> new ComparisonPredicate((CriteriaBuilderImpl) cb, ComparisonPredicate.ComparisonOperator.NOT_EQUAL, path, restriction.getTypedValue()));
+    private EnumMap fillPredicatesForSearchOperations() {
+        return new EnumMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>(SearchOperations.class) {{
+            put(EQUAL, PredicateProducer.equal());
+            put(NOT_EQUAL, PredicateProducer.notEqual());
 
+            put(BETWEEN, PredicateProducer.between());
+            put(NOT_BETWEEN, PredicateProducer.notBetween());
 
-        put(BETWEEN, (cb, path, restriction) -> {
-                    if (LocalDateTime.class.equals(path.getJavaType())) {
-                        return cb.between(path, DateTimeMapper.stringToObject(restriction.getMinValue()), DateTimeMapper.stringToObject(restriction.getMaxValue()));
-                    }
-                    if (BigDecimal.class.equals(path.getJavaType())) {
-                        return cb.between(path, new BigDecimal(restriction.getMinValue()), new BigDecimal(restriction.getMaxValue()));
-                    }
-                    return cb.isNull(path);
-                }
-        );
+            put(LIKE, PredicateProducer.like());
+            put(NOT_LIKE, PredicateProducer.notLike());
 
-        put(NOT_BETWEEN, (cb, path, restriction) -> {
-            if (LocalDateTime.class.equals(path.getJavaType())) {
-                Predicate greaterThan = predicatesForSearchOperations.get(GREATER_THAN_OR_EQUAL)
-                        .produce(cb, path, new CriteriaObject.RestrictionValues(
-                                        restriction.getKey(), restriction.getMaxValue(), GREATER_THAN_OR_EQUAL
-                                )
-                        );
-                Predicate lessThan = predicatesForSearchOperations.get(LESS_THAN_OR_EQUAL)
-                        .produce(cb, path, new CriteriaObject.RestrictionValues(
-                                        restriction.getKey(), restriction.getMinValue(), LESS_THAN_OR_EQUAL
-                                )
-                        );
-                return cb.or(greaterThan, lessThan);
-            }
+            put(LESS_THAN, PredicateProducer.lessThan());
+            put(GREATER_THAN, PredicateProducer.greaterThan());
 
-            if (BigDecimal.class.equals(path.getJavaType())) {
-                Predicate greaterThan = predicatesForSearchOperations.get(GREATER_THAN_OR_EQUAL)
-                        .produce(cb, path, new CriteriaObject.RestrictionValues(
-                                        restriction.getKey(), restriction.getMaxValue(), GREATER_THAN_OR_EQUAL
-                                )
-                        );
-                Predicate lessThan = predicatesForSearchOperations.get(LESS_THAN_OR_EQUAL)
-                        .produce(cb, path, new CriteriaObject.RestrictionValues(
-                                        restriction.getKey(), restriction.getMinValue(), LESS_THAN_OR_EQUAL
-                                )
-                        );
-                return cb.or(greaterThan, lessThan);
-            }
-            return cb.isNull(path);
-        });
-
-
-        put(LIKE, (cb, path, restriction) -> cb.like(path, "%" + restriction.getValue() + "%"));
-        put(NOT_LIKE, (cb, path, restriction) -> cb.notLike(path, "%" + restriction.getValue() + "%"));
-
-
-        put(LESS_THAN, (cb, path, restriction) -> {
-            if (LocalDateTime.class.equals(path.getJavaType())) {
-                return cb.lessThan(path, DateTimeMapper.stringToObject(restriction.getValue()));
-            }
-            if (BigDecimal.class.equals(path.getJavaType())) {
-                return cb.lessThan(path, new BigDecimal(restriction.getValue()));
-            }
-            return cb.isNull(path);
-        });
-        put(GREATER_THAN, (cb, path, restriction) -> {
-            if (LocalDateTime.class.equals(path.getJavaType())) {
-                return cb.greaterThan(path, DateTimeMapper.stringToObject(restriction.getValue()));
-            }
-            if (BigDecimal.class.equals(path.getJavaType())) {
-                return cb.greaterThan(path, new BigDecimal(restriction.getValue()));
-            }
-            return cb.isNull(path);
-        });
-
-
-        put(LESS_THAN_OR_EQUAL, (cb, path, restriction) -> {
-            if (LocalDateTime.class.equals(path.getJavaType())) {
-                return cb.lessThanOrEqualTo(path, DateTimeMapper.stringToObject(restriction.getValue()));
-            }
-            if (BigDecimal.class.equals(path.getJavaType())) {
-                return cb.lessThanOrEqualTo(path, new BigDecimal(restriction.getValue()));
-            }
-            return cb.isNull(path);
-        });
-
-        put(GREATER_THAN_OR_EQUAL, (cb, path, restriction) -> {
-            if (LocalDateTime.class.equals(path.getJavaType())) {
-                return cb.greaterThanOrEqualTo(path, DateTimeMapper.stringToObject(restriction.getValue()));
-            }
-            if (BigDecimal.class.equals(path.getJavaType())) {
-                return cb.greaterThanOrEqualTo(path, new BigDecimal(restriction.getValue()));
-            }
-            return cb.isNull(path);
-        });
-
-    }};
+            put(LESS_THAN_OR_EQUAL, PredicateProducer.lessThanOrEqual());
+            put(GREATER_THAN_OR_EQUAL, PredicateProducer.greaterThanOrEqual());
+        }};
+    }
 
 
     /**
