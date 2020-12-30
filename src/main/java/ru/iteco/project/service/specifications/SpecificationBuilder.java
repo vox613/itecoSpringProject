@@ -154,18 +154,6 @@ public class SpecificationBuilder<T> {
     }
 
     /**
-     * Метод получения предиката на основании переданных параметров
-     *
-     * @param criteriaBuilder   - объект для построения критериев и сложных выборок
-     * @param path              - путь к атрибуту
-     * @param restrictionValues - ограничения и критерии создания предиката
-     * @return - предикат на основании предоставленных данных
-     */
-    public Predicate getPredicate(CriteriaBuilder criteriaBuilder, Path path, CriteriaObject.RestrictionValues restrictionValues) {
-        return predicatesForSearchOperations.get(restrictionValues.getSearchOperation()).produce(criteriaBuilder, path, restrictionValues);
-    }
-
-    /**
      * Метод определяет относится ли операция к диапазонной
      *
      * @param searchUnit - элемент поиска со всеми данными
