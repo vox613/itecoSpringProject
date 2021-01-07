@@ -12,6 +12,7 @@ import javax.persistence.criteria.Root;
 import java.util.EnumMap;
 
 import static ru.iteco.project.service.specifications.SearchOperations.*;
+import static ru.iteco.project.service.specifications.SearchPredicatesUtil.*;
 
 /**
  * Сервис предоставляет функционал универсального формировавния спецификаций для поиска данных
@@ -31,20 +32,20 @@ public class SpecificationBuilder<T> {
      */
     private EnumMap fillPredicatesForSearchOperations() {
         return new EnumMap<SearchOperations, PredicateProducer<CriteriaBuilder, Path, CriteriaObject.RestrictionValues, Predicate>>(SearchOperations.class) {{
-            put(EQUAL, PredicateProducer.equal());
-            put(NOT_EQUAL, PredicateProducer.notEqual());
+            put(EQUAL, equal());
+            put(NOT_EQUAL, notEqual());
 
-            put(BETWEEN, PredicateProducer.between());
-            put(NOT_BETWEEN, PredicateProducer.notBetween());
+            put(BETWEEN, between());
+            put(NOT_BETWEEN, notBetween());
 
-            put(LIKE, PredicateProducer.like());
-            put(NOT_LIKE, PredicateProducer.notLike());
+            put(LIKE, like());
+            put(NOT_LIKE, notLike());
 
-            put(LESS_THAN, PredicateProducer.lessThan());
-            put(GREATER_THAN, PredicateProducer.greaterThan());
+            put(LESS_THAN, lessThan());
+            put(GREATER_THAN, greaterThan());
 
-            put(LESS_THAN_OR_EQUAL, PredicateProducer.lessThanOrEqual());
-            put(GREATER_THAN_OR_EQUAL, PredicateProducer.greaterThanOrEqual());
+            put(LESS_THAN_OR_EQUAL, lessThanOrEqual());
+            put(GREATER_THAN_OR_EQUAL, greaterThanOrEqual());
         }};
     }
 
