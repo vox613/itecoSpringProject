@@ -153,14 +153,13 @@ public class TaskServiceImpl implements TaskService {
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public TaskDtoResponse updateTask(UUID id, TaskDtoRequest taskDtoRequest) {
+    public TaskDtoResponse updateTask(TaskDtoRequest taskDtoRequest) {
         TaskDtoResponse taskDtoResponse = null;
-        if (Objects.equals(id, taskDtoRequest.getId())
-                && taskDtoRequest.getUserId() != null
-                && taskRepository.existsById(id)) {
+        if (taskDtoRequest.getUserId() != null
+                && taskRepository.existsById(taskDtoRequest.getId())) {
 
             Optional<User> userOptional = userRepository.findById(taskDtoRequest.getUserId());
-            Optional<Task> taskById = taskRepository.findById(id);
+            Optional<Task> taskById = taskRepository.findById(taskDtoRequest.getId());
             if (userOptional.isPresent() && taskById.isPresent()) {
                 User user = userOptional.get();
                 Task task = taskById.get();

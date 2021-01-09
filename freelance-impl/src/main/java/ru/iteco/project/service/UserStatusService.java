@@ -35,11 +35,10 @@ public interface UserStatusService {
     /**
      * Метод обновления данных статуса пользователя
      *
-     * @param id                   - уникальный идентификатор статуса пользователя
      * @param userStatusDtoRequest - запрос с обновленными данными статуса
      * @return - объект UserStatusDtoResponse с обновленной сущностью статуса пользователя
      */
-    UserStatusDtoResponse updateUserStatus(UUID id, UserStatusDtoRequest userStatusDtoRequest);
+    UserStatusDtoResponse updateUserStatus(UserStatusDtoRequest userStatusDtoRequest);
 
     /**
      * Метод получения данных обо всех статусах пользователей

@@ -35,11 +35,10 @@ public interface ContractStatusService {
     /**
      * Метод обновления данных статуса контракта
      *
-     * @param id                       - уникальный идентификатор статуса контракта
      * @param contractStatusDtoRequest - запрос с обновленными данными статуса
      * @return - объект ContractStatusDtoResponse с обновленной сущностью контракта
      */
-    ContractStatusDtoResponse updateContractStatus(UUID id, ContractStatusDtoRequest contractStatusDtoRequest);
+    ContractStatusDtoResponse updateContractStatus(ContractStatusDtoRequest contractStatusDtoRequest);
 
     /**
      * Метод получения данных обо всех статусах контрактов

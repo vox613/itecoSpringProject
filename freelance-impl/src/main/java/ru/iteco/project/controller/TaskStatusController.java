@@ -1,15 +1,10 @@
 package ru.iteco.project.controller;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.iteco.project.resource.TaskStatusResource;
@@ -51,7 +46,7 @@ public class TaskStatusController implements TaskStatusResource {
 
 
     @Override
-    public ResponseEntity<TaskStatusDtoResponse> getTaskStatus(@PathVariable UUID id) {
+    public ResponseEntity<TaskStatusDtoResponse> getTaskStatus(UUID id) {
         TaskStatusDtoResponse taskStatusById = taskStatusService.getTaskStatusById(id);
         if ((taskStatusById != null) && (taskStatusById.getId() != null)) {
             return ResponseEntity.ok().body(taskStatusById);
@@ -62,18 +57,13 @@ public class TaskStatusController implements TaskStatusResource {
 
 
     @Override
-    public PageDto getTasks(@RequestBody(required = false) TaskStatusSearchDto taskStatusSearchDto,
-                            @PageableDefault(size = 5,
-                                    page = 0,
-                                    sort = {"createdAt"},
-                                    direction = Sort.Direction.ASC) Pageable pageable) {
-
+    public PageDto getTasks(TaskStatusSearchDto taskStatusSearchDto, Pageable pageable) {
         return taskStatusService.getStatus(taskStatusSearchDto, pageable);
     }
 
 
     @Override
-    public ResponseEntity<? extends TaskStatusBaseDto> createUserStatus(@Validated @RequestBody TaskStatusDtoRequest taskStatusDtoRequest,
+    public ResponseEntity<? extends TaskStatusBaseDto> createUserStatus(TaskStatusDtoRequest taskStatusDtoRequest,
                                                                         BindingResult result,
                                                                         UriComponentsBuilder componentsBuilder) {
         if (result.hasErrors()) {
@@ -93,8 +83,7 @@ public class TaskStatusController implements TaskStatusResource {
 
 
     @Override
-    public ResponseEntity<? extends TaskStatusBaseDto> updateTaskStatus(@PathVariable UUID id,
-                                                                        @Validated @RequestBody TaskStatusDtoRequest taskStatusDtoRequest,
+    public ResponseEntity<? extends TaskStatusBaseDto> updateTaskStatus(UUID id, TaskStatusDtoRequest taskStatusDtoRequest,
                                                                         BindingResult result) {
 
         if (result.hasErrors()) {
@@ -102,7 +91,7 @@ public class TaskStatusController implements TaskStatusResource {
             return ResponseEntity.unprocessableEntity().body(taskStatusDtoRequest);
         }
 
-        TaskStatusDtoResponse taskStatusDtoResponse = taskStatusService.updateTaskStatus(id, taskStatusDtoRequest);
+        TaskStatusDtoResponse taskStatusDtoResponse = taskStatusService.updateTaskStatus(taskStatusDtoRequest);
 
         if (taskStatusDtoResponse != null) {
             return ResponseEntity.ok().body(taskStatusDtoResponse);
@@ -113,7 +102,7 @@ public class TaskStatusController implements TaskStatusResource {
 
 
     @Override
-    public ResponseEntity<Object> deleteTaskStatus(@PathVariable UUID id) {
+    public ResponseEntity<Object> deleteTaskStatus(UUID id) {
         if (taskStatusService.deleteTaskStatus(id)) {
             return ResponseEntity.ok().build();
         } else {

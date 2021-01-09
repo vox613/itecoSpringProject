@@ -35,11 +35,10 @@ public interface UserRoleService {
     /**
      * Метод обновления данных роли пользователя
      *
-     * @param id                 - уникальный идентификатор роли пользователя
      * @param userRoleDtoRequest - запрос с обновленными данными клиента
      * @return - объект UserRoleDtoResponse с обновленной сущностью роли пользователя
      */
-    UserRoleDtoResponse updateUserRole(UUID id, UserRoleDtoRequest userRoleDtoRequest);
+    UserRoleDtoResponse updateUserRole(UserRoleDtoRequest userRoleDtoRequest);
 
     /**
      * Метод получения данных обо всех ролях пользователей

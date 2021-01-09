@@ -35,11 +35,10 @@ public interface TaskStatusService {
     /**
      * Метод обновления данных статуса задания
      *
-     * @param id                   - уникальный идентификатор статуса задания
      * @param taskStatusDtoRequest - запрос с обновленными данными статуса
      * @return - объект TaskStatusDtoResponse с обновленной сущностью задания
      */
-    TaskStatusDtoResponse updateTaskStatus(UUID id, TaskStatusDtoRequest taskStatusDtoRequest);
+    TaskStatusDtoResponse updateTaskStatus(TaskStatusDtoRequest taskStatusDtoRequest);
 
     /**
      * Метод получения данных обо всех статусах задания

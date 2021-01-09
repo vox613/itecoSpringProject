@@ -110,10 +110,9 @@ public class ContractStatusServiceImpl implements ContractStatusService {
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public ContractStatusDtoResponse updateContractStatus(UUID id, ContractStatusDtoRequest contractStatusDtoRequest) {
+    public ContractStatusDtoResponse updateContractStatus(ContractStatusDtoRequest contractStatusDtoRequest) {
         ContractStatusDtoResponse contractStatusDtoResponse = new ContractStatusDtoResponse();
         if (operationIsAllow(contractStatusDtoRequest) &&
-                Objects.equals(id, contractStatusDtoRequest.getId()) &&
                 contractStatusRepository.existsById(contractStatusDtoRequest.getId())) {
 
             ContractStatus contractStatus = contractStatusRepository.findById(contractStatusDtoRequest.getId()).orElseThrow(

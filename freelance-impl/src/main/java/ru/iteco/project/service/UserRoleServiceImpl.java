@@ -105,10 +105,9 @@ public class UserRoleServiceImpl implements UserRoleService {
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public UserRoleDtoResponse updateUserRole(UUID id, UserRoleDtoRequest userRoleDtoRequest) {
+    public UserRoleDtoResponse updateUserRole(UserRoleDtoRequest userRoleDtoRequest) {
         UserRoleDtoResponse userRoleDtoResponse = new UserRoleDtoResponse();
         if (operationIsAllow(userRoleDtoRequest) &&
-                Objects.equals(id, userRoleDtoRequest.getId()) &&
                 userRoleRepository.existsById(userRoleDtoRequest.getId())) {
 
             UserRole userRole = userRoleRepository.findById(userRoleDtoRequest.getId()).orElseThrow(

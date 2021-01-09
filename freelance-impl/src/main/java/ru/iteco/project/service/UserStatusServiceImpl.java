@@ -105,10 +105,9 @@ public class UserStatusServiceImpl implements UserStatusService {
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public UserStatusDtoResponse updateUserStatus(UUID id, UserStatusDtoRequest userStatusDtoRequest) {
+    public UserStatusDtoResponse updateUserStatus(UserStatusDtoRequest userStatusDtoRequest) {
         UserStatusDtoResponse userStatusDtoResponse = new UserStatusDtoResponse();
         if (operationIsAllow(userStatusDtoRequest) &&
-                Objects.equals(id, userStatusDtoRequest.getId()) &&
                 userStatusRepository.existsById(userStatusDtoRequest.getId())) {
 
             UserStatus userStatusById = userStatusRepository.findById(userStatusDtoRequest.getId()).orElseThrow(

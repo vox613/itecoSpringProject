@@ -110,10 +110,9 @@ public class TaskStatusServiceImpl implements TaskStatusService {
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public TaskStatusDtoResponse updateTaskStatus(UUID id, TaskStatusDtoRequest taskStatusDtoRequest) {
+    public TaskStatusDtoResponse updateTaskStatus(TaskStatusDtoRequest taskStatusDtoRequest) {
         TaskStatusDtoResponse taskStatusDtoResponse = new TaskStatusDtoResponse();
         if (operationIsAllow(taskStatusDtoRequest) &&
-                Objects.equals(id, taskStatusDtoRequest.getId()) &&
                 taskStatusRepository.existsById(taskStatusDtoRequest.getId())) {
 
             TaskStatus taskStatus = taskStatusRepository.findById(taskStatusDtoRequest.getId()).orElseThrow(
