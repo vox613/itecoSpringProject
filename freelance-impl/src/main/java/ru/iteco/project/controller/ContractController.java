@@ -107,7 +107,7 @@ public class ContractController implements ContractResource {
             return ResponseEntity.unprocessableEntity().body(contractDtoRequest);
         }
 
-        ContractDtoResponse contractDtoResponse = contractService.updateContract(id, contractDtoRequest);
+        ContractDtoResponse contractDtoResponse = contractService.updateContract(contractDtoRequest);
 
         if (contractDtoResponse != null) {
             return ResponseEntity.ok().body(contractDtoResponse);

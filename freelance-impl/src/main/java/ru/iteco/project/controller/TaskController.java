@@ -111,7 +111,7 @@ public class TaskController implements TaskResource {
             return ResponseEntity.unprocessableEntity().body(taskDtoRequest);
         }
 
-        TaskDtoResponse taskDtoResponse = taskService.updateTask(id, taskDtoRequest);
+        TaskDtoResponse taskDtoResponse = taskService.updateTask(taskDtoRequest);
 
         if (taskDtoResponse != null) {
             return ResponseEntity.ok().body(taskDtoResponse);
